@@ -8,3 +8,23 @@ Miscellaneous scripts to quickly set-up dockerized development environments
 * Linux system with bash shell
 * Docker (with docker compose plugin) installed and running
 
+## > How to use docker-dev-scripts
+
+Use case for node development environment:
+
+* clone the project with:
+```
+git clone https://github.com/aljazmc/docker-dev-scripts
+```
+* move to the desired subdirectory:
+```
+cd node-dev
+```
+* download and setup everything necessary with:
+```
+./project.sh start
+```
+* after use you can quickly clean up with: 
+```
+./project.sh clean
+```
