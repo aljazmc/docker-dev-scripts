@@ -28,3 +28,7 @@ cd node-dev
 ```
 ./project.sh clean
 ```
+
+> [!CAUTION]
+> Function "clean" is used in development of "project.sh" to remove configuration/cached/dependencies files and folders. When developing your own project use it carefully and don't forget to change it if necessary!
+
