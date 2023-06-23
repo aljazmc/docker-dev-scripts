@@ -32,3 +32,20 @@ cd node-dev
 > [!CAUTION]
 > Function "clean" is used in development of "project.sh" to remove configuration/cached/dependencies files and folders. When developing your own project use it carefully and don't forget to change it if necessary!
 
+## > Environments:
+
+<ul>
+    <strong>
+    <li>gcc-dev</li>
+    <li>go-dev</li>
+    <li>haskell-dev</li>
+    <li>heapsio-dev</li>
+    <li>java-dev</li>
+    <li>node-dev</li>
+    <li>ocaml-dev</li>
+    <li>python-dev</li>
+    <li>rust-dev</li>
+    <li>wordpress-dev</li>
+    </strong>
+</ul>
+
