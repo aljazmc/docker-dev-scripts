@@ -1,6 +1,6 @@
-*
+/node-dev/*
 
-!project.sh
+!node-dev/project.sh
 !README.md
 !LICENSE
 !.gitignore
