@@ -19,3 +19,22 @@ PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
 "$1"
+
+## Configuration files
+
+# docker-compose.yml
+if [ ! -f docker-compose.yml ]; then
+    cat << EOF > docker-compose.yml
+services:
+    node:
+        image: node:current-alpine
+        user: $PROJECT_UID:$PROJECT_GID
+        working_dir: /home/node
+        volumes:
+            - .:/home/node
+        environment:
+            NODE_ENV:   development
+            PATH:     "/home/node/.yarn/bin:/home/node/node_modules/.bin:\$PATH"
+        network_mode: host
+EOF
+fi
