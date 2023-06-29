@@ -38,3 +38,21 @@ services:
         network_mode: host
 EOF
 fi
+
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        docker-compose.yml \
+        node_modules \
+        package.json \
+        yarn.lock \
+        .cache \
+        .npm \
+        .yarn/berry \
+        .yarn/bin \
+        .yarn/unplugged \
+        .yarn/install-state.gz \
+        .yarnrc
+
+}
