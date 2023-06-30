@@ -56,3 +56,15 @@ clean() {
         .yarnrc
 
 }
+
+node() {
+
+if [ ! -f package.json ]; then
+    docker compose run --rm node yarn init
+else
+    docker compose run --rm node yarn install
+fi
+
+    docker compose run --rm node sh -c "printenv"
+
+}
