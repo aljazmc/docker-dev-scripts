@@ -18,8 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-"$1"
-
 ## Configuration files
 
 # docker-compose.yml
@@ -68,3 +66,11 @@ fi
     docker compose run --rm node sh -c "printenv"
 
 }
+
+start() {
+
+    node
+
+}
+
+"$1"
