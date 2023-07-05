@@ -142,3 +142,8 @@ volumes:
 EOF
 fi
 
+autoload() {
+
+    docker compose run --rm composer dump-autoload -o
+
+}
