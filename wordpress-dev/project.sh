@@ -147,3 +147,55 @@ autoload() {
     docker compose run --rm composer dump-autoload -o
 
 }
+
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        .cache \
+        .config \
+        .gitignore \
+        .htaccess \
+        .npm \
+        .phpdoc \
+        .phpunit.cache \
+        .yarn \
+        .yarnrc \
+        .yarnrc.yml \
+        composer.json \
+        composer.lock \
+        docker-compose.yml \
+        index.php \
+        license.txt \
+        node_modules \
+        package.json \
+        phpcs.xml \
+        phpunit-watcher.yml \
+        phpunit.xml \
+        readme.html \
+        src \
+        tests \
+        vendor \
+        wp-activate.php \
+        wp-admin \
+        wp-blog-header.php \
+        wp-comments-post.php \
+        wp-config-docker.php \
+        wp-config-sample.php \
+        wp-config.php \
+        wp-content \
+        wp-cron.php \
+        wp-includes \
+        wp-links-opml.php \
+        wp-load.php \
+        wp-login.php \
+        wp-mail.php \
+        wp-settings.php \
+        wp-signup.php \
+        wp-trackback.php \
+        xmlrpc.php \
+        yarn-error.log \
+        yarn.lock
+
+}
+
