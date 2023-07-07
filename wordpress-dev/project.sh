@@ -313,3 +313,5 @@ fi
     ## `ls /usr/bin | grep terminal` -- sh -c "docker compose run --rm phpunit-watcher watch"
 
 }
+
+"$1"
