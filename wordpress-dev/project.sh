@@ -199,3 +199,117 @@ clean() {
 
 }
 
+start() {
+
+##################### Conditional start() tasks ################################
+
+if [ ! -d src ]; then
+
+    ## Creating directory structure
+    mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},tests/{ts,php}}
+
+    ## Setting up node related stuff
+    docker compose run --rm node yarn init
+
+    ## Setting up php related stuff
+    docker compose run --rm composer init
+
+    docker compose run --rm composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+    docker compose run --rm composer composer require --dev dealerdirect/phpcodesniffer-composer-installer
+    docker compose run --rm composer require --dev composer squizlabs/php_codesniffer
+    docker compose run --rm composer require --dev composer wp-coding-standards/wpcs
+    docker compose run --rm composer require --dev composer sirbrillig/phpcs-variable-analysis
+    docker compose run --rm composer require --dev phpcompatibility/phpcompatibility-wp
+    docker compose run --rm composer require --dev composer phpunit/phpunit
+    docker compose run --rm composer require --dev composer spatie/phpunit-watcher
+    docker compose run --rm phpunit --generate-configuration
+    cp vendor/wp-coding-standards/wpcs/phpcs.xml.dist.sample phpcs.xml
+else
+    docker compose run --rm composer install
+    docker compose run --rm node yarn install
+fi
+
+if [ ! -f phpunit-watcher.yml ]; then
+    cat << EOF > phpunit-watcher.yml
+watch:
+    directories:
+        - src
+        - tests
+    fileMask: '*.php'
+    notifications:
+        passingTests: false
+    phpunit:
+        binaryPath: vendor/bin/phpunit
+        arguments: '--stop-on-failure'
+        timeout: 180
+EOF
+fi
+
+if [ ! -f .gitignore ]; then
+    cat << EOF > .gitignore
+## Docker related
+
+/docker-compose.yml
+
+## Node/JavaScript related
+
+/.cache
+/.config
+/.eslintrc.mjs
+/.npm
+/.pnp.cjs
+/.yarn
+/.yarnrc
+/.yarnrc.yml
+/jest.config.js
+/node_modules
+/package.json
+/tsconfig.json
+/yarn.lock
+
+## PHP related
+
+/.phpdoc
+/.phpunit.cache
+/composer.json
+/composer.lock
+/phpcs.xml
+/phpunit-watcher.yml
+/phpunit.xml
+/vendor
+
+## WordPress related
+
+.htaccess
+index.php
+license.txt
+readme.html
+wp-activate.php
+wp-admin/
+wp-blog-header.php
+wp-comments-post.php
+wp-config-docker.php
+wp-config-sample.php
+wp-config.php
+wp-content/
+wp-cron.php
+wp-includes/
+wp-links-opml.php
+wp-load.php
+wp-login.php
+wp-mail.php
+wp-settings.php
+wp-signup.php
+wp-trackback.php
+xmlrpc.php
+EOF
+fi
+
+############################# Regular start() tasks ###########################
+
+    docker compose up -d && \
+    sleep 30 && \
+    docker compose run --rm wpcli
+    ## `ls /usr/bin | grep terminal` -- sh -c "docker compose run --rm phpunit-watcher watch"
+
+}
