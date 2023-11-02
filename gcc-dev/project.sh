@@ -33,3 +33,13 @@ services:
 EOF
 fi
 
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        docker-compose.yml \
+        main \
+        main.c
+
+}
+
