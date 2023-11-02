@@ -43,3 +43,23 @@ clean() {
 
 }
 
+gcc() {
+
+if [ ! -f main.c ]; then
+    cat<<EOF > main.c
+#include <stdio.h>
+
+int main(void)
+{
+    int i;
+    printf("Hello world!\n");
+}
+EOF
+fi
+
+    docker compose run --rm gcc sh -c "printenv"
+    docker compose run --rm gcc gcc main.c -o main
+    docker compose run --rm gcc sh -c "./main"
+
+}
+
