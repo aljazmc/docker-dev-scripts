@@ -1,7 +1,9 @@
 /gcc-dev/*
+/go-dev/*
 /node-dev/*
 /wordpress-dev/*
 
 !gcc-dev/project.sh
+!go-dev/project.sh
 !node-dev/project.sh
 !wordpress-dev/project.sh
