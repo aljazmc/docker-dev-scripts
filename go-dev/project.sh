@@ -73,3 +73,5 @@ start() {
     golang
 
 }
+
+"$1"
