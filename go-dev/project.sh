@@ -33,3 +33,14 @@ services:
             - .cache:/.cache
 EOF
 fi
+
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        .cache \
+        docker-compose.yml \
+        main \
+        main.go
+
+}
