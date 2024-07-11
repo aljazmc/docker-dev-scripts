@@ -44,3 +44,27 @@ clean() {
         main.go
 
 }
+
+golang() {
+
+if [ ! -d .cache ]; then
+    mkdir -p .cache
+fi
+if [ ! -f main.go ]; then
+    cat<<EOF > main.go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello World!")
+}
+EOF
+fi
+
+    docker compose run --rm golang sh -c "printenv"
+    docker compose run --rm golang go build main.go
+    docker compose run --rm golang sh -c "./main"
+
+}
+
