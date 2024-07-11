@@ -68,3 +68,8 @@ fi
 
 }
 
+start() {
+
+    golang
+
+}
