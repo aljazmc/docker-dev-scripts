@@ -68,3 +68,5 @@ fi
     docker compose run --rm haskell sh -c "./helloworld"
 
 }
+
+"$1"
