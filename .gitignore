@@ -1,11 +1,13 @@
 /gcc-dev/*
 /go-dev/*
 /haskell-dev/*
+/heapsio-dev/*
 /node-dev/*
 /wordpress-dev/*
 
 !gcc-dev/project.sh
 !go-dev/project.sh
 !haskell-dev/project.sh
+!heapsio-dev/project.sh
 !node-dev/project.sh
 !wordpress-dev/project.sh
