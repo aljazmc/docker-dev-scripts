@@ -18,3 +18,20 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
+## Functions
+
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        .cache \
+        .config \
+        compile.hxml \
+        docker-compose.yml \
+        Dockerfile \
+        hello.hl \
+        .haxelib \
+        haxelib \
+        src
+
+}
