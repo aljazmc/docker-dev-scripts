@@ -142,3 +142,4 @@ docker compose run --rm heapsio-dev hl hello.hl
 
 }
 
+"$1"
