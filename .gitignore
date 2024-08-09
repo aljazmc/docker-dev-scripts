@@ -2,6 +2,7 @@
 /go-dev/*
 /haskell-dev/*
 /heapsio-dev/*
+/java-dev/*
 /node-dev/*
 /wordpress-dev/*
 
@@ -9,5 +10,6 @@
 !go-dev/project.sh
 !haskell-dev/project.sh
 !heapsio-dev/project.sh
+!java-dev/project.sh
 !node-dev/project.sh
 !wordpress-dev/project.sh
