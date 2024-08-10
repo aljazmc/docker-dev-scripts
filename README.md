@@ -10,7 +10,7 @@ git clone https://github.com/aljazmc/docker-scripts
 ```
 cd node-dev
 ```
-* download and setup everytihng necessary with:
+* download and setup everything necessary with:
 ```
 ./project.sh start
 ```
