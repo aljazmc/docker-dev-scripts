@@ -14,7 +14,7 @@ cd node-dev
 ```
 ./project.sh start
 ```
-* after use you can clean-up with: 
+* after use you can quickly clean up with: 
 ```
 ./project.sh clean
 ```
