@@ -1,17 +1,30 @@
-# docker-scripts
+# docker-dev-scripts
 Miscellaneous scripts to quickly set-up dockerized development environments.
 
-## Basic usage:
-* clone the project with "git clone https://github.com/aljazmc/docker-scripts".
-* with "cd node-dev" (for example) move to the desired subdirectory.
-* with "./project.sh start" you download and setup everything.
-* with "./project.sh clean" you clean everything.
+## > Basic usage:
+* clone the project with:
+```
+git clone https://github.com/aljazmc/docker-scripts
+```
+* move to the desired subdirectory:
+```
+cd node-dev
+```
+* download and setup everytihng necessary with:
+```
+./project.sh start
+```
+* after use you can clean-up with: 
+```
+./project.sh clean
+```
 
-## Requirements:
+## > Requirements:
+
 * GNU/Linux operating system
 * docker with docker compose plugin
 
-## Examples:
+## > Examples:
 ```
 gcc-dev:
   "./project.sh start" ## 1.) Download gcc container,
@@ -130,4 +143,4 @@ wordpress-dev:
                        ## and theme files.
 ```
 
-LICENSE: [MIT](https://github.com/aljazmc/docker-scripts/blob/main/LICENSE)
+## > LICENSE: [MIT](https://github.com/aljazmc/docker-scripts/blob/main/LICENSE)
