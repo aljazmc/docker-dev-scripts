@@ -1,7 +1,13 @@
 # docker-dev-scripts
 Miscellaneous scripts to quickly set-up dockerized development environments.
 
+## > Requirements:
+
+* GNU/Linux operating system
+* docker with docker compose plugin
+
 ## > Basic usage:
+
 * clone the project with:
 ```
 git clone https://github.com/aljazmc/docker-scripts
@@ -19,12 +25,8 @@ cd node-dev
 ./project.sh clean
 ```
 
-## > Requirements:
-
-* GNU/Linux operating system
-* docker with docker compose plugin
-
 ## > Examples:
+
 ```
 gcc-dev:
   "./project.sh start" ## 1.) Download gcc container,
