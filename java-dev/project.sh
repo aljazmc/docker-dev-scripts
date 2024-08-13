@@ -17,3 +17,21 @@ fi
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+
+## Configuration files
+
+# Dockerfile
+
+# docker-compose.yml
+if [ ! -f docker-compose.yml ]; then
+    cat << EOF > docker-compose.yml
+services:
+    java-compiler:
+        image: eclipse-temurin:22-alpine
+        user: $PROJECT_UID:$PROJECT_GID
+        working_dir: /opt/app
+        volumes:
+            - .:/opt/app
+EOF
+fi
+
