@@ -12,3 +12,8 @@ if [[ ! -x "$(command -v compose version)" ]]; then
     exit
 fi
 
+## Variables
+
+#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
+PROJECT_UID=$(id -u)
+PROJECT_GID=$(id -g)
