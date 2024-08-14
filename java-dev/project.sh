@@ -45,3 +45,22 @@ clean() {
 
 }
 
+runjava() {
+
+if [ ! -f HelloWorld.java ]; then
+    cat<<EOF > HelloWorld.java
+public class HelloWorld {
+    public static void main(String[] args) {
+        // Prints "Hello, World" in the terminal window.
+        System.out.println("Hello, World");
+   }
+}
+EOF
+fi
+
+    docker compose run --rm java-compiler sh -c "printenv"
+    docker compose run --rm java-compiler javac HelloWorld.java
+    docker compose run --rm java-compiler java HelloWorld
+
+}
+
