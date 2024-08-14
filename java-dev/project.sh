@@ -64,3 +64,8 @@ fi
 
 }
 
+start() {
+
+    runjava
+
+}
