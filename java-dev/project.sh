@@ -69,3 +69,5 @@ start() {
     runjava
 
 }
+
+"$1"
