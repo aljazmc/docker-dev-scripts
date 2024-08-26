@@ -4,6 +4,7 @@
 /heapsio-dev/*
 /java-dev/*
 /node-dev/*
+/ocaml-dev/*
 /wordpress-dev/*
 
 !gcc-dev/project.sh
@@ -12,4 +13,5 @@
 !heapsio-dev/project.sh
 !java-dev/project.sh
 !node-dev/project.sh
+!ocaml-dev/project.sh
 !wordpress-dev/project.sh
