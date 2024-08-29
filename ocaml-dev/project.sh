@@ -80,3 +80,5 @@ fi
     docker compose run --rm ocamlopam sh -c "printenv"
 
 }
+
+"$1"
