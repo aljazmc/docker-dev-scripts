@@ -18,3 +18,17 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
+## Functions
+
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        docker-compose.yml \
+        Dockerfile \
+        hello.ml \
+        helloworld \
+        .opam
+
+}
+
