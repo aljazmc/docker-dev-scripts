@@ -32,3 +32,14 @@ services:
             - .:/usr/src/app
 EOF
 fi
+
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        __pycache__ \
+        docker-compose.yml \
+        hello.py
+
+}
+
