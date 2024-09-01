@@ -43,3 +43,17 @@ clean() {
 
 }
 
+python() {
+
+if [ ! -f hello.py ]; then
+    cat<<EOF > hello.py
+print('Hello, world!')
+EOF
+fi
+
+    docker compose run --rm python-dev sh -c "python -m py_compile hello.py"
+    docker compose run --rm python-dev sh -c "python __pycache__/hello.cpython-313.pyc"
+    docker compose run --rm python-dev sh -c "printenv"
+
+}
+
