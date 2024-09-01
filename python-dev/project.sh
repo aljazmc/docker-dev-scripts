@@ -57,3 +57,9 @@ fi
 
 }
 
+start() {
+
+    python
+
+}
+
