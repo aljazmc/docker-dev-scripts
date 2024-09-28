@@ -49,6 +49,7 @@ services:
       - .:/home/node
     environment:
       NODE_ENV: development
+      PATH: "/home/node/.yarn/bin:/home/node/node_modules/.bin:\$PATH"
 
   phpcbf:
     image: php:$PHP_VERSION-fpm-alpine
@@ -101,7 +102,7 @@ services:
     image: wordpress:latest
     user: $PROJECT_UID:$PROJECT_GID
     volumes:
-      - ./$PROJECT_NAME:/var/www/html/wp-content/themes/$PROJECT_NAME
+      - .:/var/www/html/
     links:
       - database
     ports:
@@ -136,6 +137,7 @@ clean() {
   docker compose down -v --rmi all --remove-orphans
   rm -rf \
     .cache \
+    .config \
     .npm \
     .phpdoc \
     .phpunit.cache \
@@ -154,10 +156,10 @@ start() {
 
 ##################### Conditional start() tasks ################################
 
-  if [ ! -d $PROJECT_NAME ]; then
+  if [ ! -d src ]; then
 
     ## Creating directory structure
-    mkdir -p {$PROJECT_NAME/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},__tests__/{ts,php}}
+    mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},__tests__/{ts,php}}
 
     ## Setting up node related stuff
     docker compose run node yarn init
@@ -184,7 +186,7 @@ start() {
     cat << EOF > phpunit-watcher.yml
 watch:
   directories:
-    - $PROJECT_NAME
+    - src
     - __tests__
   fileMask: '*.php'
   notifications:
@@ -204,6 +206,7 @@ EOF
 ## Node/JavaScript related
 
 /.cache
+/.config
 /.eslintrc.mjs
 /.npm
 /.pnp.cjs
@@ -225,7 +228,33 @@ EOF
 /phpcs.xml
 /phpunit-watcher.yml
 /phpunit.xml
-/vendor
+
+## WordPress related
+
+.htaccess
+index.php
+license.txt
+readme.html
+wp-activate.php
+wp-admin/
+wp-blog-header.php
+wp-comments-post.php
+wp-config-docker.php
+wp-config-sample.php
+wp-config.php
+wp-content/
+wp-cron.php
+wp-includes/
+wp-links-opml.php
+wp-load.php
+wp-login.php
+wp-mail.php
+wp-settings.php
+wp-signup.php
+wp-trackback.php
+xmlrpc.php/vendor
+
+
 EOF
   fi
 
