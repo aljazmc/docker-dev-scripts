@@ -132,6 +132,12 @@ volumes:
 EOF
 fi
 
+autoload() {
+
+    docker compose run composer dump-autoload -o
+
+}
+
 clean() {
 
   docker compose down -v --rmi all --remove-orphans
