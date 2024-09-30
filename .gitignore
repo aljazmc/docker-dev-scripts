@@ -6,6 +6,7 @@
 /node-dev/*
 /ocaml-dev/*
 /python-dev/*
+/rust-dev/*
 /wordpress-dev/*
 
 !gcc-dev/project.sh
@@ -16,4 +17,5 @@
 !node-dev/project.sh
 !ocaml-dev/project.sh
 !python-dev/project.sh
+!rust-dev/project.sh
 !wordpress-dev/project.sh
