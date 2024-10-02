@@ -18,3 +18,17 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
+## Configuration files
+
+# docker-compose.yml
+if [ ! -f docker-compose.yml ]; then
+    cat << EOF > docker-compose.yml
+services:
+    rust:
+        image: rust:latest
+        user: $PROJECT_UID:$PROJECT_GID
+        working_dir: /usr/src/app
+        volumes:
+            - .:/usr/src/app
+EOF
+fi
