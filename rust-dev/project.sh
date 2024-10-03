@@ -32,3 +32,13 @@ services:
             - .:/usr/src/app
 EOF
 fi
+
+clean() {
+
+    docker compose down -v --rmi all --remove-orphans
+    rm -rf \
+        docker-compose.yml \
+        hello \
+        hello.rs
+
+}
