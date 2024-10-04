@@ -42,3 +42,20 @@ clean() {
         hello.rs
 
 }
+
+rust() {
+
+if [ ! -f hello.rs ]; then
+    cat<<EOF > hello.rs
+fn main() {
+    println!("Hello World!");
+}
+EOF
+fi
+
+    docker compose run --rm rust sh -c "printenv"
+    docker compose run --rm rust rustc hello.rs
+    docker compose run --rm rust sh -c "./hello"
+
+}
+
