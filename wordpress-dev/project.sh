@@ -234,6 +234,7 @@ EOF
 /phpcs.xml
 /phpunit-watcher.yml
 /phpunit.xml
+/vendor
 
 ## WordPress related
 
@@ -258,7 +259,7 @@ wp-mail.php
 wp-settings.php
 wp-signup.php
 wp-trackback.php
-xmlrpc.php/vendor
+xmlrpc.php
 
 
 EOF
