@@ -14,7 +14,7 @@ fi
 
 ## Variables
 
-PROJECT_NAME=expression
+PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_GID=`id -g`
 PROJECT_UID=`id -u`
 PHP_VERSION=8.3
