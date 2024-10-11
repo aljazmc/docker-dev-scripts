@@ -14,7 +14,7 @@ fi
 
 ## Variables
 
-PROJECT_NAME=`realpath . | sed 's@.*/@@'`
+PROJECT_NAME=expression
 PROJECT_GID=`id -g`
 PROJECT_UID=`id -u`
 PHP_VERSION=8.3
@@ -165,7 +165,7 @@ start() {
   if [ ! -d src ]; then
 
     ## Creating directory structure
-    mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},__tests__/{ts,php}}
+    mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},tests/{ts,php}}
 
     ## Setting up node related stuff
     docker compose run node yarn init
@@ -193,7 +193,7 @@ start() {
 watch:
   directories:
     - src
-    - __tests__
+    - tests
   fileMask: '*.php'
   notifications:
     passingTests: false
