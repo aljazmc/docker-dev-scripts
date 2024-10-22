@@ -4,7 +4,7 @@ Miscellaneous scripts to quickly set-up dockerized development environments.
 ## > Requirements:
 
 * GNU/Linux operating system
-* docker with docker compose plugin
+* docker compose
 
 ## > Basic usage:
 
