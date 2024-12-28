@@ -14,9 +14,9 @@ fi
 
 ## Variables
 
-PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
-PROJECT_UID=`id -u`
-PROJECT_GID=`id -g`
+#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
+PROJECT_UID=$(id -u)
+PROJECT_GID=$(id -g)
 
 export COMPOSE_IGNORE_ORPHANS=True
 echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
@@ -44,7 +44,7 @@ services:
         image: ocaml/opam:debian
         user: ${PROJECT_UID}:${PROJECT_GID}
         working_dir: /home/$USER
-        command: /bin/sh -c "opam init --root=/home/`echo $USER`/.opam"
+        command: /bin/sh -c "opam init --root=/home/$USER/.opam"
         environment:
             DISPLAY: $DISPLAY
             XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
@@ -69,7 +69,7 @@ if [ ! -d .opam ]; then
         echo "\$OPAMROOT is already present in docker-compose.yml"
     else
         echo "adding \$OPAMROOT to docker-compose.yml"
-        sed -i "9i \ \ \ \ \ \ \ \ \ \ \ \ OPAMROOT: "/home/$USER/.opam"" docker-compose.yml
+        sed -i "9i \ \ \ \ \ \ \ \ \ \ \ \ OPAMROOT: /home/$USER/.opam" docker-compose.yml
     fi
 
     docker compose run ocamlopam opam config list

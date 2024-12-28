@@ -3,7 +3,7 @@
 ## Check for linux and docker compose or quit
 
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-    echo "Script runs only on GNU/Linux OS. Exiting..."
+    echo "Script runs only on GNU/Linux OS. Exiting..." 
     exit
 fi
 
@@ -14,9 +14,9 @@ fi
 
 ## Variables
 
-PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
-PROJECT_UID=`id -u`
-PROJECT_GID=`id -g`
+#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
+PROJECT_UID=$(id -u)
+PROJECT_GID=$(id -g)
 
 export COMPOSE_IGNORE_ORPHANS=True
 echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
