@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Configuration files
 
 # docker-compose.yml
@@ -61,12 +58,12 @@ clean() {
 node() {
 
 if [ ! -f package.json ]; then
-    docker compose run node yarn init
+    docker compose run --rm node yarn init
 else
-    docker compose run node yarn install
+    docker compose run --rm node yarn install
 fi
 
-    docker compose run node sh -c "printenv"
+    docker compose run --rm node sh -c "printenv"
 
 }
 

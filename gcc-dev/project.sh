@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Configuration files
 
 # docker-compose.yml
@@ -60,9 +57,9 @@ int main(void)
 EOF
 fi
 
-    docker compose run gcc sh -c "printenv"
-    docker compose run gcc gcc main.c -o main
-    docker compose run gcc sh -c "./main"
+    docker compose run --rm gcc sh -c "printenv"
+    docker compose run --rm gcc gcc main.c -o main
+    docker compose run --rm gcc sh -c "./main"
 
 }
 

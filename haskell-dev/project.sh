@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Functions
 
 clean() {
@@ -66,9 +63,9 @@ main = putStrLn "Hello, World!"
 EOF
 fi
 
-    docker compose run haskell sh -c "printenv"
-    docker compose run haskell ghc helloworld.hs
-    docker compose run haskell sh -c "./helloworld"
+    docker compose run --rm haskell sh -c "printenv"
+    docker compose run --rm haskell ghc helloworld.hs
+    docker compose run --rm haskell sh -c "./helloworld"
 
 }
 

@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Configuration files
 
 # Dockerfile
@@ -61,9 +58,9 @@ public class HelloWorld {
 EOF
 fi
 
-    docker compose run java-compiler sh -c "printenv"
-    docker compose run java-compiler javac HelloWorld.java
-    docker compose run java-compiler java HelloWorld
+    docker compose run --rm java-compiler sh -c "printenv"
+    docker compose run --rm java-compiler javac HelloWorld.java
+    docker compose run --rm java-compiler java HelloWorld
 
 }
 

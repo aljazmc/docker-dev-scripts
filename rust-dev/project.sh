@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Configuration files
 
 # docker-compose.yml
@@ -56,9 +53,9 @@ fn main() {
 EOF
 fi
 
-    docker compose run rust sh -c "printenv"
-    docker compose run rust rustc hello.rs
-    docker compose run rust sh -c "./hello"
+    docker compose run --rm rust sh -c "printenv"
+    docker compose run --rm rust rustc hello.rs
+    docker compose run --rm rust sh -c "./hello"
 
 }
 

@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Configuration files
 
 # docker-compose.yml
@@ -65,9 +62,9 @@ func main() {
 EOF
 fi
 
-    docker compose run golang sh -c "printenv"
-    docker compose run golang go build main.go
-    docker compose run golang sh -c "./main"
+    docker compose run --rm golang sh -c "printenv"
+    docker compose run --rm golang go build main.go
+    docker compose run --rm golang sh -c "./main"
 
 }
 

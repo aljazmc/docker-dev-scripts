@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Functions
 
 clean() {
@@ -134,14 +131,14 @@ class Main extends hxd.App {
 EOF
 fi
 
-[ ! -d haxelib/heaps ]      && docker compose run heapsio-dev bash -c "haxelib setup && haxelib install heaps"
-[ ! -d haxelib/hlopenal ]   && docker compose run heapsio-dev bash -c "haxelib install hlopenal"
-[ ! -d haxelib/hlsdl ]      && docker compose run heapsio-dev bash -c "haxelib install hlsdl"
-[ ! -d haxelib/hldx ]       && docker compose run heapsio-dev bash -c "haxelib install hldx"
+[ ! -d haxelib/heaps ]      && docker compose run --rm heapsio-dev bash -c "haxelib setup && haxelib install heaps"
+[ ! -d haxelib/hlopenal ]   && docker compose run --rm heapsio-dev bash -c "haxelib install hlopenal"
+[ ! -d haxelib/hlsdl ]      && docker compose run --rm heapsio-dev bash -c "haxelib install hlsdl"
+[ ! -d haxelib/hldx ]       && docker compose run --rm heapsio-dev bash -c "haxelib install hldx"
 
-docker compose run heapsio-dev sh -c "printenv"
-docker compose run heapsio-dev haxe compile.hxml
-docker compose run heapsio-dev hl hello.hl
+docker compose run --rm heapsio-dev sh -c "printenv"
+docker compose run --rm heapsio-dev haxe compile.hxml
+docker compose run --rm heapsio-dev hl hello.hl
 
 }
 

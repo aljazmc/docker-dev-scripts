@@ -18,9 +18,6 @@ fi
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Functions
 
 clean() {
@@ -62,7 +59,7 @@ fi
 
 if [ ! -d .opam ]; then
 
-    docker compose run ocamlopam
+    docker compose run --rm ocamlopam
 
     if grep "OPAMROOT" docker-compose.yml
     then
@@ -72,15 +69,15 @@ if [ ! -d .opam ]; then
         sed -i "9i \ \ \ \ \ \ \ \ \ \ \ \ OPAMROOT: /home/$USER/.opam" docker-compose.yml
     fi
 
-    docker compose run ocamlopam opam config list
-    docker compose run ocamlopam opam install core
-    docker compose run ocamlopam dune init proj helloworld
+    docker compose run --rm ocamlopam opam config list
+    docker compose run --rm ocamlopam opam install core
+    docker compose run --rm ocamlopam dune init proj helloworld
 
 fi
 
-    docker compose run ocamlopam sh -c "cd helloworld && dune build"
-    docker compose run ocamlopam sh -c "cd helloworld && dune exec helloworld"
-    docker compose run ocamlopam sh -c "printenv"
+    docker compose run --rm ocamlopam sh -c "cd helloworld && dune build"
+    docker compose run --rm ocamlopam sh -c "cd helloworld && dune exec helloworld"
+    docker compose run --rm ocamlopam sh -c "printenv"
 
 }
 

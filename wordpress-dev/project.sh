@@ -19,9 +19,6 @@ PROJECT_GID=$(id -g)
 PROJECT_UID=$(id -u)
 PHP_VERSION=8.3
 
-export COMPOSE_IGNORE_ORPHANS=True
-echo "Setting COMPOSE_IGNORE_ORPHANS to true and making it accessible to current shell process"
-
 ## Configuration files
 
 if [ ! -f docker-compose.yml ]; then
@@ -147,7 +144,7 @@ fi
 
 autoload() {
 
-    docker compose run composer dump-autoload -o
+    docker compose run --rm composer dump-autoload -o
 
 }
 
@@ -212,24 +209,24 @@ if [ ! -d src ]; then
     mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},tests/{ts,php}}
 
     ## Setting up node related stuff
-    docker compose run node yarn init
+    docker compose run --rm node yarn init
 
     ## Setting up php related stuff
-    docker compose run composer init
+    docker compose run --rm composer init
 
-    docker compose run composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-    docker compose run composer composer require --dev dealerdirect/phpcodesniffer-composer-installer
-    docker compose run composer require --dev composer squizlabs/php_codesniffer
-    docker compose run composer require --dev composer wp-coding-standards/wpcs
-    docker compose run composer require --dev composer sirbrillig/phpcs-variable-analysis
-    docker compose run composer require --dev phpcompatibility/phpcompatibility-wp
-    docker compose run composer require --dev composer phpunit/phpunit
-    docker compose run composer require --dev composer spatie/phpunit-watcher
-    docker compose run phpunit --generate-configuration
+    docker compose run --rm composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+    docker compose run --rm composer composer require --dev dealerdirect/phpcodesniffer-composer-installer
+    docker compose run --rm composer require --dev composer squizlabs/php_codesniffer
+    docker compose run --rm composer require --dev composer wp-coding-standards/wpcs
+    docker compose run --rm composer require --dev composer sirbrillig/phpcs-variable-analysis
+    docker compose run --rm composer require --dev phpcompatibility/phpcompatibility-wp
+    docker compose run --rm composer require --dev composer phpunit/phpunit
+    docker compose run --rm composer require --dev composer spatie/phpunit-watcher
+    docker compose run --rm phpunit --generate-configuration
     cp vendor/wp-coding-standards/wpcs/phpcs.xml.dist.sample phpcs.xml
 else
-    docker compose run composer install
-    docker compose run node yarn install
+    docker compose run --rm composer install
+    docker compose run --rm node yarn install
 fi
 
 if [ ! -f phpunit-watcher.yml ]; then
@@ -312,8 +309,8 @@ fi
 
     docker compose up -d && \
     sleep 30 && \
-    docker compose run wpcli
-    ## `ls /usr/bin | grep terminal` -- sh -c "docker compose run phpunit-watcher watch"
+    docker compose run --rm wpcli
+    ## `ls /usr/bin | grep terminal` -- sh -c "docker compose run --rm phpunit-watcher watch"
 
 }
 
