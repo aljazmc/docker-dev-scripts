@@ -34,18 +34,26 @@ cd node-dev
 
 ## > Environments:
 
-<ul>
-    <strong>
-    <li>gcc-dev</li>
-    <li>go-dev</li>
-    <li>haskell-dev</li>
-    <li>heapsio-dev</li>
-    <li>java-dev</li>
-    <li>node-dev</li>
-    <li>ocaml-dev</li>
-    <li>python-dev</li>
-    <li>rust-dev</li>
-    <li>wordpress-dev</li>
-    </strong>
-</ul>
+<table border="0">
+    <tr>
+    <td>gcc-dev</td>
+    <td>go-dev</td>
+    </tr>
+    <tr>
+    <td>haskell-dev</td>
+    <td>heapsio-dev</td>
+    </tr>
+    <tr>
+    <td>java-dev</td>
+    <td>node-dev</td>
+    </tr>
+    <tr>
+    <td>ocaml-dev</td>
+    <td>python-dev</td>
+    </tr>
+    <tr>
+    <td>rust-dev</td>
+    <td>wordpress-dev</td>
+    </tr>
+</table>
 
