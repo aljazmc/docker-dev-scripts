@@ -2,11 +2,17 @@
 
 # docker-dev-scripts
 Miscellaneous scripts to quickly set-up dockerized development environments
+&nbsp;
+
+&nbsp;
 
 ## > Prerequisites
 
 * Linux system with bash shell
 * Docker (with docker compose plugin) installed and running
+&nbsp;
+
+&nbsp;
 
 ## > How to use docker-dev-scripts
 
@@ -31,6 +37,9 @@ cd node-dev
 
 > [!CAUTION]
 > Function "clean" is used in development of "project.sh" to remove configuration/cached/dependencies files and folders. When developing your own project use it carefully and don't forget to change it if necessary!
+&nbsp;
+
+&nbsp;
 
 ## > Environments:
 
@@ -56,4 +65,7 @@ cd node-dev
     <td>wordpress-dev</td>
     </tr>
 </table>
+&nbsp;
+
+&nbsp;
 
