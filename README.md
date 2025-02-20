@@ -10,7 +10,7 @@ Scripts to quickly setup dockerized development environments
 * **simple one-command cleanup:** with `./project.sh clean`.
 
 > [!CAUTION]
-> Function "clean" is used in development of "project.sh" to remove **ALL** files and folders. When developing your own project don't forget to tweak it when necessary!
+> Function "clean" is used in development of "project.sh" to remove **ALL** generated files and folders. When developing your own project don't forget to change it!
 
 ## > Prerequisites
 
@@ -36,7 +36,7 @@ cd node-dev
 ```
 
 > [!CAUTION]
-> Function "clean" is used in development of "project.sh" to remove **ALL** files and folders. When developing your own project don't forget to tweak it when necessary!
+> Function "clean" is used in development of "project.sh" to remove **ALL** generated files and folders. When developing your own project don't forget to change it!
 
 ## > Environments:
 
