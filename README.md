@@ -1,45 +1,42 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 # docker-dev-scripts
-Miscellaneous scripts to quickly set-up dockerized development environments
-&nbsp;
+Scripts to quickly setup dockerized development environments
 
-&nbsp;
+## > Features
+
+* **fully automated setup**
+* **simple one-command start:** with `./project.sh start`.
+* **simple one-command cleanup:** with `./project.sh clean`.
+
+> [!CAUTION]
+> Function "clean" is used in development of "project.sh" to remove **ALL** files and folders. When developing your own project don't forget to tweak it when necessary!
 
 ## > Prerequisites
 
 * Linux system with bash shell
 * Docker (with docker compose plugin) installed and running
-&nbsp;
 
-&nbsp;
-
-## > How to use docker-dev-scripts
+## > Example
 
 Use case for node development environment:
 
-* clone the project with:
 ```
+## clone the project with:
 git clone https://github.com/aljazmc/docker-dev-scripts
-```
-* move to the desired subdirectory:
-```
+
+## move to the desired subdirectory:
 cd node-dev
-```
-* download and setup everything necessary with:
-```
+
+## download and setup everything necessary with:
 ./project.sh start
-```
-* after use you can quickly clean up with: 
-```
+
+## after use you can quickly clean up with: 
 ./project.sh clean
 ```
 
 > [!CAUTION]
-> Function "clean" is used in development of "project.sh" to remove configuration/cached/dependencies files and folders. When developing your own project use it carefully and don't forget to change it if necessary!
-&nbsp;
-
-&nbsp;
+> Function "clean" is used in development of "project.sh" to remove **ALL** files and folders. When developing your own project don't forget to tweak it when necessary!
 
 ## > Environments:
 
@@ -65,7 +62,3 @@ cd node-dev
     <td>wordpress-dev</td>
     </tr>
 </table>
-&nbsp;
-
-&nbsp;
-
