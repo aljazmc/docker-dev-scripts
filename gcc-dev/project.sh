@@ -1,11 +1,6 @@
 #!/bin/bash
 
-## Check for linux and docker compose or quit
-
-if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-  echo "Script runs only on GNU/Linux OS. Exiting..."
-  exit
-fi
+## Check for docker compose or quit
 
 if [[ ! -x "$(command -v compose version)" ]]; then
   echo "Compose plugin is not installed. Exiting..."
@@ -26,11 +21,16 @@ if [ ! -f docker-compose.yml ]; then
 services:
   gcc:
     image: gcc:latest
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /usr/src/app
     volumes:
       - .:/usr/src/app
 EOF
+
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+    sed -i "3 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+  fi
+
 fi
 
 clean() {
