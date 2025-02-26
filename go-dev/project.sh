@@ -21,7 +21,6 @@ if [ ! -f docker-compose.yml ]; then
 services:
   golang:
     image: golang:latest
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /usr/src/app
     volumes:
       - .:/usr/src/app
