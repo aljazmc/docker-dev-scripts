@@ -1,12 +1,5 @@
 #!/bin/bash
 
-## Check for docker compose or quit
-
-if [[ ! -x "$(command -v compose version)" ]]; then
-  echo "Compose plugin is not installed. Exiting..."
-  exit
-fi
-
 ## Variables
 
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
