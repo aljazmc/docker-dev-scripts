@@ -1,12 +1,5 @@
 #!/bin/bash
 
-## Checks if OS is linux
-
-if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-  echo "Script runs only on GNU/Linux OS. Exiting..."
-  exit
-fi
-
 ## Variables
 
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
@@ -34,7 +27,6 @@ if [[ ! -f docker-compose.yml ]]; then
 services:
   haskell:
     image: haskell:latest
-    user: ${PROJECT_UID}:${PROJECT_GID}
     working_dir: /home/$USER
     environment:
       DISPLAY: $DISPLAY
@@ -49,6 +41,12 @@ services:
       - /dev/snd:/dev/snd
     network_mode: host
 EOF
+
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+    sed -i "3 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+  fi
+
 fi
 
 if [[ ! -f helloworld.hs ]]; then
