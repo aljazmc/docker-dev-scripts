@@ -68,9 +68,9 @@ if [ ! -d .opam ]; then
 
 fi
 
+  docker compose run --rm ocamlopam sh -c "printenv"
   docker compose run --rm ocamlopam sh -c "cd helloworld && dune build"
   docker compose run --rm ocamlopam sh -c "cd helloworld && dune exec helloworld"
-  docker compose run --rm ocamlopam sh -c "printenv"
 
 }
 
