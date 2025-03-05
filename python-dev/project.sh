@@ -1,12 +1,5 @@
 #!/bin/bash
 
-## Check for linux
-
-if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-  echo "Script runs only on GNU/Linux OS. Exiting..."
-  exit
-fi
-
 ## Variables
 
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
@@ -26,6 +19,12 @@ services:
     volumes:
       - .:/usr/src/app
 EOF
+
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+    sed -i "3 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+  fi
+
 fi
 
 clean() {
