@@ -14,7 +14,6 @@ if [ ! -f docker-compose.yml ]; then
 services:
   python-dev:
     image: python:latest
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /usr/src/app
     volumes:
       - .:/usr/src/app
