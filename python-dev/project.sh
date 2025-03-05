@@ -3,8 +3,8 @@
 ## Check for linux
 
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-    echo "Script runs only on GNU/Linux OS. Exiting..."
-    exit
+  echo "Script runs only on GNU/Linux OS. Exiting..."
+  exit
 fi
 
 ## Variables
@@ -17,44 +17,44 @@ PROJECT_GID=$(id -g)
 
 # docker-compose.yml
 if [ ! -f docker-compose.yml ]; then
-    cat << EOF > docker-compose.yml
+  cat << EOF > docker-compose.yml
 services:
-    python-dev:
-        image: python:latest
-        user: $PROJECT_UID:$PROJECT_GID
-        working_dir: /usr/src/app
-        volumes:
-            - .:/usr/src/app
+  python-dev:
+    image: python:latest
+    user: $PROJECT_UID:$PROJECT_GID
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
 EOF
 fi
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        __pycache__ \
-        docker-compose.yml \
-        hello.py
+  docker compose down -v --rmi all --remove-orphans
+  rm -rf \
+    __pycache__ \
+    docker-compose.yml \
+    hello.py
 
 }
 
 python() {
 
 if [ ! -f hello.py ]; then
-    cat<<EOF > hello.py
+  cat<<EOF > hello.py
 print('Hello, world!')
 EOF
 fi
 
-    docker compose run --rm python-dev sh -c "python -m py_compile hello.py"
-    docker compose run --rm python-dev sh -c "python __pycache__/hello.cpython-313.pyc"
-    docker compose run --rm python-dev sh -c "printenv"
+  docker compose run --rm python-dev sh -c "printenv"
+  docker compose run --rm python-dev sh -c "python -m py_compile hello.py"
+  docker compose run --rm python-dev sh -c "python __pycache__/hello.cpython-313.pyc"
 
 }
 
 start() {
 
-    python
+  python
 
 }
 
