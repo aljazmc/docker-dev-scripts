@@ -3,8 +3,8 @@
 ## Check for linux
 
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-    echo "Script runs only on GNU/Linux OS. Exiting..."
-    exit
+  echo "Script runs only on GNU/Linux OS. Exiting..."
+  exit
 fi
 
 ## Variables
@@ -17,46 +17,46 @@ PROJECT_GID=$(id -g)
 
 # docker-compose.yml
 if [ ! -f docker-compose.yml ]; then
-    cat << EOF > docker-compose.yml
+  cat << EOF > docker-compose.yml
 services:
-    rust:
-        image: rust:latest
-        user: $PROJECT_UID:$PROJECT_GID
-        working_dir: /usr/src/app
-        volumes:
-            - .:/usr/src/app
+  rust:
+    image: rust:latest
+    user: $PROJECT_UID:$PROJECT_GID
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
 EOF
 fi
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        docker-compose.yml \
-        hello \
-        hello.rs
+  docker compose down -v --rmi all --remove-orphans
+  rm -rf \
+    docker-compose.yml \
+    hello \
+    hello.rs
 
 }
 
 rust() {
 
 if [ ! -f hello.rs ]; then
-    cat<<EOF > hello.rs
+  cat<<EOF > hello.rs
 fn main() {
-    println!("Hello World!");
+  println!("Hello World!");
 }
 EOF
 fi
 
-    docker compose run --rm rust sh -c "printenv"
-    docker compose run --rm rust rustc hello.rs
-    docker compose run --rm rust sh -c "./hello"
+  docker compose run --rm rust sh -c "printenv"
+  docker compose run --rm rust rustc hello.rs
+  docker compose run --rm rust sh -c "./hello"
 
 }
 
 start() {
 
-    rust
+  rust
 
 }
 
