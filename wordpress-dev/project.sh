@@ -1,12 +1,5 @@
 #!/bin/bash
 
-## Check for linux
-
-if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-  echo "Script runs only on GNU/Linux OS. Exiting..."
-  exit
-fi
-
 ## Variables
 
 PROJECT_NAME=$(basename "$PWD") ## PROJECT_NAME = parent directory
@@ -21,7 +14,6 @@ if [ ! -f docker-compose.yml ]; then
 services:
   composer:
     image: composer:latest
-    user: $PROJECT_UID:$PROJECT_GID
     command: [ composer, install ]
     volumes:
       - .:/app
@@ -40,7 +32,6 @@ services:
 
   node:
     image: node:current-alpine
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /home/node
     volumes:
       - .:/home/node
@@ -50,7 +41,6 @@ services:
 
   phpcbf:
     image: php:$PHP_VERSION-fpm-alpine
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /app
     volumes:
       - .:/app
@@ -58,7 +48,6 @@ services:
 
   phpcs:
     image: php:$PHP_VERSION-fpm-alpine
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /app
     volumes:
       - .:/app
@@ -66,7 +55,6 @@ services:
 
   phpdoc:
     image: phpdoc/phpdoc
-    user: $PROJECT_UID:$PROJECT_GID
     volumes:
       - .:/data
 
@@ -81,7 +69,6 @@ services:
 
   phpunit:
     image: php:$PHP_VERSION-fpm-alpine
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /app
     volumes:
       - .:/app
@@ -89,7 +76,6 @@ services:
 
   phpunit-watcher:
     image: php:$PHP_VERSION-fpm-alpine
-    user: $PROJECT_UID:$PROJECT_GID
     working_dir: /app
     volumes:
       - .:/app
@@ -97,7 +83,6 @@ services:
 
   wordpress:
     image: wordpress:latest
-    user: $PROJECT_UID:$PROJECT_GID
     volumes:
       - .:/var/www/html/
     links:
@@ -112,7 +97,6 @@ services:
 
   wpcli:
     image: wordpress:cli
-    user: $PROJECT_UID:$PROJECT_GID
     command: /bin/sh -c ' \
       wp core install \
       --path="/var/www/html" \
@@ -135,6 +119,20 @@ services:
 volumes:
   db_data:
 EOF
+
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+    sed -i "3 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "22 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "32 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "40 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "48 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "63 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "71 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "79 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "94 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+  fi
+
 fi
 
 autoload() {
