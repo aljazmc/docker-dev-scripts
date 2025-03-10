@@ -30,6 +30,15 @@ services:
       MARIADB_USER:           $PROJECT_NAME
       MARIADB_PASSWORD:       $PROJECT_NAME
 
+  myadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST:               database
+      PMA_PORT:               3306
+      MYSQL_ROOT_PASSWORD:    $PROJECT_NAME
+    ports:
+      - 8080:80
+
   node:
     image: node:current-alpine
     working_dir: /home/node
@@ -57,15 +66,6 @@ services:
     image: phpdoc/phpdoc
     volumes:
       - .:/data
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    environment:
-      PMA_HOST:               database
-      PMA_PORT:               3306
-      MYSQL_ROOT_PASSWORD:    $PROJECT_NAME
-    ports:
-      - 8080:80
 
   phpunit:
     image: php:$PHP_VERSION-fpm-alpine
@@ -122,15 +122,7 @@ EOF
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
-    sed -i "3 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "22 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "32 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "40 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "48 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "63 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "71 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "79 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-    sed -i "94 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "/image\:\ [c,n,p,w]/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
   fi
 
 fi
