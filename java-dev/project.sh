@@ -15,7 +15,7 @@ if [ ! -f docker-compose.yml ]; then
   cat << EOF > docker-compose.yml
 services:
   java-compiler:
-    image: eclipse-temurin:22-alpine
+    image: eclipse-temurin:23-alpine
     working_dir: /opt/app
     volumes:
       - .:/opt/app
