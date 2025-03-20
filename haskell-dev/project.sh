@@ -28,26 +28,45 @@ services:
   haskell:
     image: haskell:latest
     working_dir: /home/$USER
-    environment:
-      DISPLAY: $DISPLAY
-      XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
     volumes:
       - .:/home/$USER
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}
-      - ~/.Xauthority:/root/.Xauthority
-    devices:
-      - /dev/dri:/dev/dri
-      - /dev/snd:/dev/snd
     network_mode: host
 EOF
 
-  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
-    sed -i "3 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
-  fi
+################ GNU Linux variables block for docker-compose.yml #############
 
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+devices="$(cat <<-EOT
+   devices:\\
+      - /dev/dri:/dev/dri\\
+      - /dev/snd:/dev/snd
+EOT
+)"
+environment="$(cat <<-EOT
+   environment:\\
+      DISPLAY: $DISPLAY\\
+      XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
+EOT
+)"
+user="$(cat <<-EOT
+   user: $PROJECT_UID:$PROJECT_GID
+EOT
+)"
+volumes="$(cat <<-EOT
+     - /tmp/.X11-unix:/tmp/.X11-unix\\
+      - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}\\
+      - ~/.Xauthority:/root/.Xauthority
+EOT
+)"
+    echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+    sed -i "3a \ $user" docker-compose.yml
+    sed -i "5a \ $environment"  docker-compose.yml
+    sed -i "10a \ $volumes"  docker-compose.yml
+    sed -i "13a \ $devices"  docker-compose.yml
+  fi
 fi
+
+###############################################################################
 
 if [[ ! -f helloworld.hs ]]; then
   cat <<-EOF > helloworld.hs
