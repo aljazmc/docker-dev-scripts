@@ -29,28 +29,54 @@ services:
     image: ocaml/opam:debian
     working_dir: /home/$USER
     command: /bin/sh -c "opam init --root=/home/$USER/.opam"
-    environment:
-      DISPLAY: $DISPLAY
-      XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
     volumes:
       - .:/home/$USER
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}
-      - ~/.Xauthority:/root/.Xauthority
-    devices:
-      - /dev/dri:/dev/dri
-      - /dev/snd:/dev/snd
     network_mode: host
 EOF
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+devices="$(cat <<-EOT
+   devices:\\
+      - /dev/dri:/dev/dri\\
+      - /dev/snd:/dev/snd
+EOT
+)"
+environment="$(cat <<-EOT
+   environment:\\
+      DISPLAY: $DISPLAY\\
+      XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
+EOT
+)"
+user="$(cat <<-EOT
+   user: $PROJECT_UID:$PROJECT_GID
+EOT
+)"
+volumes="$(cat <<-EOT
+     - /tmp/.X11-unix:/tmp/.X11-unix\\
+      - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}\\
+      - ~/.Xauthority:/root/.Xauthority
+EOT
+)"
     echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
-    sed -i "3 a \ \ \ \ user\:\ $PROJECT_UID\:$PROJECT_GID" docker-compose.yml
+    sed -i "3a \ $user" docker-compose.yml
+    sed -i "5a \ $environment"  docker-compose.yml
+    sed -i "11a \ $volumes"  docker-compose.yml
+    sed -i "14a \ $devices"  docker-compose.yml
   fi
   
 fi
 
 if [ ! -d .opam ]; then
+opamroot="$(cat <<-EOT
+     OPAMROOT: /home/$USER/.opam
+EOT
+)"
+opamrootwithenv="$(cat <<-EOT
+    environment:\\
+      OPAMROOT: /home/$USER/.opam
+EOT
+)"
+
 
   docker compose run --rm ocamlopam
 
@@ -58,8 +84,14 @@ if [ ! -d .opam ]; then
   then
     echo "\$OPAMROOT is already present in docker-compose.yml"
   else
-    echo "adding \$OPAMROOT to docker-compose.yml"
-    sed -i "9i \ \ \ \ \ \ OPAMROOT: /home/$USER/.opam" docker-compose.yml
+    if grep "environment" docker-compose.yml
+    then
+      echo "adding \$OPAMROOT to docker-compose.yml"
+      sed -i "7a \ $opamroot" docker-compose.yml
+    else
+      echo "adding \$OPAMROOT with environment to docker-compose.yml"
+      sed -i "5a \ $opamrootwithenv" docker-compose.yml
+    fi
   fi
 
   docker compose run --rm ocamlopam opam config list
