@@ -31,6 +31,7 @@ start() {
 if [[ ! -f compile.hxml ]]; then
   cat <<-EOF > compile.hxml
 -cp src
+-lib format
 -lib heaps
 -lib hlsdl
 -hl hello.hl
@@ -52,7 +53,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libpng-dev \
   libsdl2-dev \
   libsqlite3-dev \
-  libturbojpeg-dev \
+  libturbojpeg0-dev \
   libuv1-dev \
   libvorbis-dev \
   make \
@@ -62,6 +63,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   cd /usr/src && \
   git clone https://github.com/HaxeFoundation/hashlink && \
   cd hashlink && \
+  git checkout 82ea54ca && \
   make && \
   make install
 
@@ -87,43 +89,22 @@ services:
   heapsio-dev:
     build: .
     working_dir: /home/$USER
+    user: $PROJECT_UID:$PROJECT_GID
+    environment:
+      DISPLAY: $DISPLAY
+      XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
     volumes:
       - .:/home/$USER
       - ./haxelib:/usr/lib/haxe/lib
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}
+      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
+      - ~/.Xauthority:/root/.Xauthority
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/snd:/dev/snd
     network_mode: host
 EOF
-
-  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-devices="$(cat <<-EOT
-   devices:\\
-      - /dev/dri:/dev/dri\\
-      - /dev/snd:/dev/snd
-EOT
-)"
-environment="$(cat <<-EOT
-   environment:\\
-      DISPLAY: $DISPLAY\\
-      XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
-EOT
-)"
-user="$(cat <<-EOT
-   user: $PROJECT_UID:$PROJECT_GID
-EOT
-)"
-volumes="$(cat <<-EOT
-     - /tmp/.X11-unix:/tmp/.X11-unix\\
-      - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}\\
-      - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id\\
-      - ~/.Xauthority:/root/.Xauthority
-EOT
-)"
-    echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
-    sed -i "4a \ $user" docker-compose.yml
-    sed -i "5a \ $environment"  docker-compose.yml
-    sed -i "11a \ $volumes"  docker-compose.yml
-    sed -i "15a \ $devices"  docker-compose.yml
-  fi
-
 fi
 
 if [[ ! -f src/Main.hx ]]; then
@@ -140,14 +121,15 @@ class Main extends hxd.App {
 EOF
 fi
 
-[ ! -d haxelib/heaps ]      && docker compose run --rm heapsio-dev bash -c "haxelib setup && haxelib install heaps"
+[ ! -d haxelib/heaps ]      && docker compose run --rm heapsio-dev bash -c "haxelib setup && haxelib install format"
+[ ! -d haxelib/heaps ]      && docker compose run --rm heapsio-dev bash -c "haxelib install heaps 2.0.0"
 [ ! -d haxelib/hlopenal ]   && docker compose run --rm heapsio-dev bash -c "haxelib install hlopenal"
 [ ! -d haxelib/hlsdl ]      && docker compose run --rm heapsio-dev bash -c "haxelib install hlsdl"
 [ ! -d haxelib/hldx ]       && docker compose run --rm heapsio-dev bash -c "haxelib install hldx"
 
-  docker compose run --rm heapsio-dev sh -c "printenv"
-  docker compose run --rm heapsio-dev haxe compile.hxml
-  docker compose run --rm heapsio-dev hl hello.hl
+  docker compose run heapsio-dev sh -c "printenv"
+  docker compose run heapsio-dev haxe compile.hxml
+  docker compose run heapsio-dev hl hello.hl
 
 }
 
