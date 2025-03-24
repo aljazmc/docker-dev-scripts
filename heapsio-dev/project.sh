@@ -127,9 +127,9 @@ fi
 [ ! -d haxelib/hlsdl ]      && docker compose run --rm heapsio-dev bash -c "haxelib install hlsdl"
 [ ! -d haxelib/hldx ]       && docker compose run --rm heapsio-dev bash -c "haxelib install hldx"
 
-  docker compose run heapsio-dev sh -c "printenv"
-  docker compose run heapsio-dev haxe compile.hxml
-  docker compose run heapsio-dev hl hello.hl
+  docker compose run --rm heapsio-dev sh -c "printenv"
+  docker compose run --rm heapsio-dev haxe compile.hxml
+  docker compose run --rm heapsio-dev hl hello.hl
 
 }
 
