@@ -122,7 +122,7 @@ EOF
 fi
 
 [ ! -d haxelib/heaps ]      && docker compose run --rm heapsio-dev bash -c "haxelib setup && haxelib install format"
-[ ! -d haxelib/heaps ]      && docker compose run --rm heapsio-dev bash -c "haxelib install heaps 2.0.0"
+[ ! -d haxelib/heaps ]      && docker compose run --rm heapsio-dev bash -c "haxelib install heaps"
 [ ! -d haxelib/hlopenal ]   && docker compose run --rm heapsio-dev bash -c "haxelib install hlopenal"
 [ ! -d haxelib/hlsdl ]      && docker compose run --rm heapsio-dev bash -c "haxelib install hlsdl"
 [ ! -d haxelib/hldx ]       && docker compose run --rm heapsio-dev bash -c "haxelib install hldx"
