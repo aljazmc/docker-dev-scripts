@@ -41,12 +41,14 @@ services:
 
   node:
     image: node:current-alpine
-    working_dir: /home/node
+    working_dir: "$PWD"
     volumes:
-      - .:/home/node
+      - .:$PWD
     environment:
-      NODE_ENV: development
-      PATH: "/home/node/.yarn/bin:/home/node/node_modules/.bin:\$PATH"
+      HOME:       "$PWD"
+      NODE_ENV:   development
+      PATH:       "$PWD/.yarn/bin:$PWD/node_modules/.bin:\$PATH"
+    network_mode: host
 
   phpcbf:
     image: php:$PHP_VERSION-fpm-alpine
