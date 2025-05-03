@@ -14,12 +14,13 @@ if [ ! -f docker-compose.yml ]; then
 services:
   node:
     image: node:current-alpine
-    working_dir: /home/node
+    working_dir: "$PWD"
     volumes:
-      - .:/home/node
+      - .:$PWD
     environment:
+      HOME:       "$PWD"
       NODE_ENV:   development
-      PATH:     "/home/node/.yarn/bin:/home/node/node_modules/.bin:\$PATH"
+      PATH:       "$PWD/.yarn/bin:$PWD/node_modules/.bin:\$PATH"
     network_mode: host
 EOF
 
