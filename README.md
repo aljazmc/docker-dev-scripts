@@ -9,9 +9,6 @@ Scripts to quickly setup dockerized development environments
 * **simple one-command start:** with `./project.sh start`.
 * **simple one-command cleanup:** with `./project.sh clean`.
 
-> [!CAUTION]
-> Function "clean" is used in development of "project.sh" to remove **ALL** generated files and folders. When developing your own project don't forget to change it!
-
 ## > Prerequisites
 
 * Linux system with bash shell
