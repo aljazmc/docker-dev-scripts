@@ -39,20 +39,24 @@ cd node-dev
 
 <table border="0">
     <tr>
+    <td>androidsdk-dev</td>
     <td>gcc-dev</td>
+    </tr>
+    <tr>
     <td>go-dev</td>
-    </tr>
-    <tr>
     <td>haskell-dev</td>
+    </tr>
+    <tr>
     <td>heapsio-dev</td>
-    </tr>
-    <tr>
     <td>java-dev</td>
-    <td>node-dev</td>
     </tr>
     <tr>
+    <td>node-dev</td>
     <td>ocaml-dev</td>
+    </tr>
+    <tr>
     <td>python-dev</td>
+    <td>reactnative-dev</td>
     </tr>
     <tr>
     <td>rust-dev</td>
