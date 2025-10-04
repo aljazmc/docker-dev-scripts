@@ -2,10 +2,16 @@
 
 ## Variables
 
+KVMOWNER=$(ls -l /dev/kvm | awk '{print $3}');
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 SDK=$(echo /home/"$USER"/sdk)
+
+if [[ "$KVMOWNER" != "$USER" ]]; then 
+  echo "'/dev/kvm' is not owned by the current user. Aborting..."
+  exit
+fi
 
 ## Functions
 
@@ -24,6 +30,7 @@ clean() {
     .gradle \
     .knownPackages \
     .kotlin \
+    .pki \
     sdk \
     .temp \
     .wget-hsts \
@@ -32,76 +39,52 @@ clean() {
 }
 
 confighack() {
-if [[ ! -f app/app/src/main/AndroidManifest.xml ]]; then
+
+  mkdir -p app/app/src/main/resources/values
+
+  if [[ ! -f app/app/src/main/AndroidManifest.xml ]]; then
   cat <<EOF > app/app/src/main/AndroidManifest.xml
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <application
-        android:allowBackup="true"
-        android:supportsRtl="true"
-        tools:targetApi="36">
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:label="App" android:allowBackup="false">
+        <activity android:name="App">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
-
 </manifest>
 EOF
-  { echo "android.useAndroidX=true"; echo "kotlin.code.style=official"; } >> app/gradle.properties
+  {
+    echo "org.gradle.configuration-cache=true"; \
+    echo "android.useAndroidX=true"; \
+  } >> app/gradle.properties
   cat <<EOF > app/build.gradle.kts
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.compose.compiler) apply false
 }
 EOF
   cat <<EOF > app/app/build.gradle.kts
 plugins {
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
-    extra.set("appId", "org.example.app")
-    namespace = "org.example.app"
-    
-    lint {
-        abortOnError = false
-    }
-    
+    compileSdk = 36
+
     defaultConfig {
-        applicationId = "org.example.app"
         minSdk = 28
-        compileSdk = 36
-        targetSdk = 36
+        namespace = "org.example"
+
+        applicationId = "org.example"
         versionCode = 1
         versionName = "v1"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    
-    buildTypes {
-        getByName("debug") {
-            isDebuggable = true
-        }
-        getByName("release") {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            isDebuggable = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-    }
-
-}
-
-kotlin {
-    jvmToolchain(21)
 }
 
 java {
@@ -111,56 +94,85 @@ java {
 }
 
 dependencies {
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
+    // Use the Kotlin Test integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation(libs.junit.jupiter.engine)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
 
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+    // Use the JUnit 5 integration.
+    testImplementation(libs.junit.jupiter.engine)
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
 }
 EOF
   cat <<"EOF" > app/settings.gradle.kts
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
-        mavenCentral()
         gradlePluginPortal()
+        google()
+        mavenCentral()
     }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
     }
 }
 
-rootProject.name = "HelloWorld"
+rootProject.name = ("app")
 include(":app")
 EOF
   cat <<EOF > app/gradle/libs.versions.toml
 [versions]
+activity = "1.11.0"
+activity-compose = "1.11.0"
+compose-material3 = "1.4.0"
 agp = "8.13.0"
-guava = "33.5.0-android"
-kotlin = "2.2.20"
 junit-jupiter-engine = "5.12.1"
+kotlin = "2.2.20"
 
 [libraries]
-guava = { module = "com.google.guava:guava", version.ref = "guava" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "compose-material3" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 
 [plugins]
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+EOF
+  cat <<EOF > app/app/src/main/kotlin/org/example/App.kt
+package org.example
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material3.Text
+
+class App : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            Text("Hello world!")
+        }
+    }
+}
+EOF
+  cat <<EOF > app/app/src/test/kotlin/org/example/AppTest.kt
+package org.example
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class AppTest {
+    @Test fun dummyTest() {
+        assertEquals(4, 2+2)
+    }
+}
 EOF
 fi
 }
@@ -274,22 +286,28 @@ fi
   docker compose run --rm androidsdk sh -c "yes | sdkmanager --licenses"
   docker compose run --rm androidsdk sh -c "sdkmanager --update && \
     sdkmanager \
-      'build-tools;36.1.0' \
+      'build-tools;36.0.0' \
       'cmake;4.1.1' \
       'emulator' \
       'ndk;28.2.13676358' \
       'platform-tools' \
-      'platforms;android-36.1' \
-      'system-images;android-36.1;google_apis;x86_64' "
+      'platforms;android-36' \
+      'system-images;android-36;google_apis;x86_64' "
   docker compose run --rm androidsdk sh -c "sdkmanager --list"
   docker compose run --rm androidsdk sh -c "printenv"
   
   docker compose run --rm androidsdk sh -c "cd app && yes | gradle init --type kotlin-application --dsl kotlin"
-  docker compose run --rm androidsdk sh -c "echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36.1;google_apis;x86_64'"
+  docker compose run --rm androidsdk sh -c "echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36;google_apis;x86_64'"
 
-#  confighack
+  mate-terminal -- sh -c "docker compose run --rm androidsdk sh -c 'emulator -avd 1'"
+
+  confighack
   
   docker compose run --rm androidsdk sh -c "cd app && gradlew tasks"
+  docker compose run --rm androidsdk sh -c "cd app && gradlew build"
+  docker compose run --rm androidsdk sh -c "cd app && gradlew installDebug"
+  docker compose run --rm androidsdk sh -c "adb shell 'am start -n org.example/org.example.App'"
+  
 }
 
 "$1"
