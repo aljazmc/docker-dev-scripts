@@ -203,7 +203,7 @@ if [ ! -d src ]; then
 
   docker compose run --rm composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
   docker compose run --rm composer composer require --dev dealerdirect/phpcodesniffer-composer-installer
-  docker compose run --rm composer require --dev composer squizlabs/php_codesniffer
+  docker compose run --rm composer require --dev composer "squizlabs/php_codesniffer:^3.13"
   docker compose run --rm composer require --dev composer wp-coding-standards/wpcs
   docker compose run --rm composer require --dev composer sirbrillig/phpcs-variable-analysis
   docker compose run --rm composer require --dev phpcompatibility/phpcompatibility-wp
