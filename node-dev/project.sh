@@ -34,7 +34,7 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     node:
@@ -62,7 +62,7 @@ composehack() {
 
 node() {
 
-if [ ! -f package.json ]; then
+if [[ ! -f package.json ]]; then
 
     docker compose run --rm node yarn init
 
