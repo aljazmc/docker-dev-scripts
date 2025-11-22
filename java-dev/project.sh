@@ -20,7 +20,7 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     java-compiler:
@@ -44,7 +44,7 @@ composehack() {
 
 runjava() {
 
-if [ ! -f HelloWorld.java ]; then
+if [[ ! -f HelloWorld.java ]]; then
     cat<<EOF > HelloWorld.java
 public class HelloWorld {
     public static void main(String[] args) {
