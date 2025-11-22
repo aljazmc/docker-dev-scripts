@@ -20,7 +20,7 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     rust:
@@ -44,7 +44,7 @@ composehack() {
 
 rust() {
 
-if [ ! -f hello.rs ]; then
+if [[ ! -f hello.rs ]]; then
     cat<<EOF > hello.rs
 fn main() {
     println!("Hello World!");

@@ -22,7 +22,7 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat <<-EOF > docker-compose.yml
 services:
     haskell:

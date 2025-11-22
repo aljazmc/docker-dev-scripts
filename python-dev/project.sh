@@ -20,7 +20,7 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     python-dev:
@@ -44,7 +44,7 @@ composehack() {
 
 python() {
 
-if [ ! -f hello.py ]; then
+if [[ ! -f hello.py ]]; then
     cat<<EOF > hello.py
 print('Hello, world!')
 EOF

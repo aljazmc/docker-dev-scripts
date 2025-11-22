@@ -20,7 +20,7 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     gcc:
@@ -44,7 +44,7 @@ composehack() {
 
 gcc() {
 
-if [ ! -f main.c ]; then
+if [[ ! -f main.c ]]; then
     cat<<EOF > main.c
 #include <stdio.h>
 

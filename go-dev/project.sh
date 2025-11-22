@@ -21,7 +21,7 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     golang:
@@ -46,13 +46,13 @@ composehack() {
 
 golang() {
 
-if [ ! -d .cache ]; then
+if [[ ! -d .cache ]]; then
 
     mkdir -p .cache
 
 fi
 
-if [ ! -f main.go ]; then
+if [[ ! -f main.go ]]; then
     cat<<EOF > main.go
 package main
 

@@ -68,12 +68,12 @@ clean() {
 
 compose() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     composer:
         image: composer:latest
-        command: [ composer, install ]
+        command: [[ composer, install ]
         volumes:
             - .:/app
         environment:
@@ -187,7 +187,7 @@ composehack() {
 
 configphpunitwatcher() {
 
-if [ ! -f phpunit-watcher.yml ]; then
+if [[ ! -f phpunit-watcher.yml ]]; then
     cat << EOF > phpunit-watcher.yml
 watch:
     directories:
@@ -207,7 +207,7 @@ fi
 
 gitignore() {
 
-if [ ! -f .gitignore ]; then
+if [[ ! -f .gitignore ]]; then
     cat << EOF > .gitignore
 ## Docker related
 
@@ -282,7 +282,7 @@ start() {
     configphpunitwatcher
     gitignore
     
-    if [ ! -d src ]; then
+    if [[ ! -d src ]]; then
 
         ## Creating directory structure
         mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},tests/{ts,php}}
