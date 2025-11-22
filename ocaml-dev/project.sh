@@ -36,7 +36,7 @@ clean() {
 
 start() {
 
-if [ ! -f docker-compose.yml ]; then
+if [[ ! -f docker-compose.yml ]]; then
   cat <<-EOF > docker-compose.yml
 services:
   ocamlopam:
@@ -59,7 +59,7 @@ services:
 EOF
 fi
 
-if [ ! -d .opam ]; then
+if [[ ! -d .opam ]]; then
 opamroot="$(cat <<-EOT
      OPAMROOT: /home/$USER/.opam
 EOT
