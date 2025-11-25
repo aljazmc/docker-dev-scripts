@@ -69,7 +69,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cd /usr/src && \
     git clone https://github.com/HaxeFoundation/hashlink && \
     cd hashlink && \
-    git checkout 82ea54ca && \
+    git checkout latest && \
     make && \
     make install
 
