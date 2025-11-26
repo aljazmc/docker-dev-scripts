@@ -30,7 +30,7 @@ FROM debian:latest
 
 ENV PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     g++ \
     git \
@@ -74,10 +74,9 @@ services:
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /run/user/$PROJECT_UID:/run/user/$PROJECT_UID
             - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
-            - ~/.Xauthority:/root/.Xauthority
+            - ~/.Xauthority:/home/$USER/.Xauthority
         environment:
             DISPLAY: $DISPLAY
-            QT_X11_NO_MITSHM: 1
             XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
         devices:
             - /dev/dri:/dev/dri
@@ -104,7 +103,7 @@ rust() {
 	    && cd bevy && \
 	    git checkout latest"
     docker compose run --rm rust sh -c "cd bevy \
-	    && cargo run --example breakout"
+	    && cargo run --features x11 --example hello_world"
     docker compose run --rm rust sh -c "printenv"
 
 }
