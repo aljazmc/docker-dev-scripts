@@ -73,7 +73,7 @@ if [[ ! -f docker-compose.yml ]]; then
 services:
     composer:
         image: composer:latest
-        command: [[ composer, install ]
+        command: [ composer, install ]
         volumes:
             - .:/app
         environment:
