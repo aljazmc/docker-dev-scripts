@@ -16,7 +16,7 @@ clean() {
         .cache \
         .cargo \
        	.rustup \
-	.Xauthority \
+        .Xauthority \
         Dockerfile \
         bevy \
         docker-compose.yml
