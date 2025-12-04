@@ -1,3 +1,5 @@
+/androidsdk-dev/*
+/bevy-dev/*
 /gcc-dev/*
 /go-dev/*
 /haskell-dev/*
@@ -6,9 +8,12 @@
 /node-dev/*
 /ocaml-dev/*
 /python-dev/*
+/reactnative-dev/*
 /rust-dev/*
 /wordpress-dev/*
 
+!androidsdk-dev/project.sh
+!bevy-dev/project.sh
 !gcc-dev/project.sh
 !go-dev/project.sh
 !haskell-dev/project.sh
@@ -17,5 +22,6 @@
 !node-dev/project.sh
 !ocaml-dev/project.sh
 !python-dev/project.sh
+!reactnative-dev/project.sh
 !rust-dev/project.sh
 !wordpress-dev/project.sh
