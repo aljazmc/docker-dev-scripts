@@ -22,12 +22,14 @@ clean() {
         .pnp.loader.mjs \
         .vim \
         .vimrc \
+	.yarn \
         .yarn/berry \
         .yarn/bin \
         .yarn/sdks \
         .yarn/unplugged \
         .yarn/install-state.gz \
-        .yarnrc
+        .yarnrc \
+	.yarnrc.yml
 
 }
 
