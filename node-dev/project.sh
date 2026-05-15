@@ -12,12 +12,18 @@ clean() {
 
     docker compose down -v --rmi all --remove-orphans
     rm -rf \
+	Dockerfile \
+	README.md \
         dist \
         docker-compose.yml \
         node_modules \
         package.json \
         yarn.lock \
         .cache \
+	.editorconfig \
+	.gitattributes \
+	.gitignore \
+	.npm \
         .pnp.cjs \
         .pnp.loader.mjs \
         .vim \
@@ -36,17 +42,28 @@ clean() {
 
 compose() {
 
+if [[ ! -f Dockerfile ]]; then
+    cat << EOF > Dockerfile
+FROM node:current-alpine
+
+RUN apk update && \
+    apk add git && \
+    npm install -g corepack
+EOF
+fi
+
 if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     node:
-        image: node:current-alpine
+        build: .
         working_dir: "$PWD"
         volumes:
             - .:$PWD
         environment:
-            HOME:               "$PWD"
-            NODE_ENV:           development
+            COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
+            HOME:                            "$PWD"
+            NODE_ENV:                        development
         network_mode: host
 EOF
 fi
@@ -66,7 +83,7 @@ node() {
 
 if [[ ! -f package.json ]]; then
 
-    docker compose run --rm node yarn init
+    docker compose run --rm node yarn init -y
 
 else
 
