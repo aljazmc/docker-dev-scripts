@@ -23,6 +23,7 @@ clean() {
         .editorconfig \
         .gitattributes \
         .gitignore \
+        .git \
         .npm \
         .pnp.cjs \
         .pnp.loader.mjs \
