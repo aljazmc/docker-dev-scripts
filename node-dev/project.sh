@@ -12,30 +12,30 @@ clean() {
 
     docker compose down -v --rmi all --remove-orphans
     rm -rf \
-	Dockerfile \
-	README.md \
+        Dockerfile \
+        README.md \
         dist \
         docker-compose.yml \
         node_modules \
         package.json \
         yarn.lock \
         .cache \
-	.editorconfig \
-	.gitattributes \
-	.gitignore \
-	.npm \
+        .editorconfig \
+        .gitattributes \
+        .gitignore \
+        .npm \
         .pnp.cjs \
         .pnp.loader.mjs \
         .vim \
         .vimrc \
-	.yarn \
+        .yarn \
         .yarn/berry \
         .yarn/bin \
         .yarn/sdks \
         .yarn/unplugged \
         .yarn/install-state.gz \
         .yarnrc \
-	.yarnrc.yml
+        .yarnrc.yml
 
 }
 
