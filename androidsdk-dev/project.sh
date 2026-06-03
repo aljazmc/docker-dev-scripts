@@ -2,7 +2,7 @@
 
 ## Variables
 
-KVMOWNER=$(ls -l /dev/kvm | awk '{print $3}');
+KVMOWNER=$(ls -l /dev/kvm | awk '{print $3}')
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
@@ -255,9 +255,9 @@ services:
             ANDROID_USER_HOME: /home/$USER/.android
             ANDROID_SDK_ROOT: $SDK
             DISPLAY: $DISPLAY
-            GRADLE_HOME: $SDK/gradle-9.2.1/bin
+            GRADLE_HOME: $SDK/gradle-9.5.1/bin
             GRADLE_USER_HOME: /home/$USER/.gradle
-            PATH: "/home/$USER/app:$SDK/build-tools/35.0.0:$SDK/gradle-9.2.1/bin:$SDK/kotlinc/bin:$SDK/emulator:$SDK/cmdline-tools/latest/bin:$SDK/platform-tools:\$PATH"
+            PATH: "/home/$USER/app:$SDK/build-tools/35.0.0:$SDK/gradle-9.5.1/bin:$SDK/kotlinc/bin:$SDK/emulator:$SDK/cmdline-tools/latest/bin:$SDK/platform-tools:\$PATH"
             XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
         volumes:
             - .:/home/$USER
@@ -273,16 +273,16 @@ services:
 EOF
 fi
 
-    docker compose run --rm androidsdk sh -c "wget https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip && \
+    docker compose run --rm androidsdk sh -c "wget https://dl.google.com/android/repository/commandlinetools-linux-14742923_latest.zip && \
         unzip commandlinetools-linux-*_latest.zip cmdline-tools/* -d sdk/cmdline-tools && \
         cd sdk/cmdline-tools && \
         mv cmdline-tools latest && \
         rm ../../commandlinetools-linux-*_latest.zip"
-    docker compose run --rm androidsdk sh -c "wget https://services.gradle.org/distributions/gradle-9.2.1-bin.zip && \
-        unzip gradle-9.2.1-bin.zip -d sdk && \
+    docker compose run --rm androidsdk sh -c "wget https://services.gradle.org/distributions/gradle-9.5.1-bin.zip && \
+        unzip gradle-9.5.1-bin.zip -d sdk && \
         rm gradle-*-bin.zip"
-    docker compose run --rm androidsdk sh -c "wget https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip && \
-        unzip kotlin-compiler-2.2.21.zip -d sdk && \
+    docker compose run --rm androidsdk sh -c "wget https://github.com/JetBrains/kotlin/releases/download/v2.4.0/kotlin-compiler-2.4.0.zip && \
+        unzip kotlin-compiler-2.4.0.zip -d sdk && \
         rm kotlin-compiler-*.zip"
     docker compose run --rm androidsdk sh -c "yes | sdkmanager --licenses"
     docker compose run --rm androidsdk sh -c "sdkmanager --update && \
@@ -290,15 +290,15 @@ fi
             'build-tools;35.0.0' \
             'cmake;4.1.2' \
             'emulator' \
-            'ndk;29.0.14206865' \
+            'ndk;30.0.14904198' \
             'platform-tools' \
             'platforms;android-36' \
-            'system-images;android-36;google_apis;x86_64' "
+            'system-images;android-36;default;x86_64' "
     docker compose run --rm androidsdk sh -c "sdkmanager --list"
     docker compose run --rm androidsdk sh -c "printenv"
     
     docker compose run --rm androidsdk sh -c "cd app && yes | gradle init --type kotlin-application --dsl kotlin"
-    docker compose run --rm androidsdk sh -c "echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36;google_apis;x86_64'"
+    docker compose run --rm androidsdk sh -c "echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36;default;x86_64'"
   
     mate-terminal -- sh -c "docker compose run --rm androidsdk sh -c 'emulator -avd 1'"
   
