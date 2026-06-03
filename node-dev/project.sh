@@ -58,7 +58,7 @@ if [[ ! -f docker-compose.yml ]]; then
 services:
     node:
         build: .
-        working_dir: "$PWD"
+        working_dir: $PWD
         volumes:
             - .:$PWD
         environment:
