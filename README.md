@@ -50,22 +50,23 @@ cd node-dev
     <td>go-dev</td>
     </tr>
     <tr>
+    <td>godot-dev</td>
     <td>haskell-dev</td>
+    </tr>
+    <tr>
     <td>heapsio-dev</td>
-    </tr>
-    <tr>
     <td>java-dev</td>
+    </tr>
+    <tr>
     <td>node-dev</td>
-    </tr>
-    <tr>
     <td>ocaml-dev</td>
+    </tr>
+    <tr>
     <td>python-dev</td>
-    </tr>
-    <tr>
     <td>reactnative-dev</td>
-    <td>rust-dev</td>
     </tr>
     <tr>
+    <td>rust-dev</td>
     <td>wordpress-dev</td>
     </tr>
 </table>
