@@ -4,7 +4,7 @@
 /go-dev/*
 /godot-dev/*
 /haskell-dev/*
-/heapsio-dev/*
+/heaps-dev/*
 /java-dev/*
 /node-dev/*
 /ocaml-dev/*
@@ -25,8 +25,8 @@
 !godot-dev/project.sh
 !haskell-dev/Dockerfile
 !haskell-dev/project.sh
-!heapsio-dev/Dockerfile
-!heapsio-dev/project.sh
+!heaps-dev/Dockerfile
+!heaps-dev/project.sh
 !java-dev/Dockerfile
 !java-dev/project.sh
 !node-dev/Dockerfile
