@@ -54,7 +54,7 @@ cd node-dev
     <td>haskell-dev</td>
     </tr>
     <tr>
-    <td>heapsio-dev</td>
+    <td>heaps-dev</td>
     <td>java-dev</td>
     </tr>
     <tr>
