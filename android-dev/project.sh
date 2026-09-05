@@ -2,12 +2,13 @@
 
 ## Variables
 
+USER=android
+
 KVMOWNER=$(ls -l /dev/kvm | awk '{print $3}')
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 SDK=$(echo /home/"$USER"/sdk)
-USER=android
 
 # if [[ "$KVMOWNER" != "$(id -u):$(id -g)" ]]; then 
 #     echo "'/dev/kvm' is not owned by the current user. Aborting..."
