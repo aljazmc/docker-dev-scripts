@@ -5,16 +5,21 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+USER=rust
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        docker-compose.yml \
-        hello \
-        hello.rs
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
@@ -24,10 +29,10 @@ if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     rust:
-        image: rust:latest
-        working_dir: /usr/src/app
+        build: .
+        working_dir: /home/$USER
         volumes:
-            - .:/usr/src/app
+            - .:/home/$USER
 EOF
 fi
 
@@ -52,9 +57,11 @@ fn main() {
 EOF
 fi
 
-    docker compose run --rm rust rustc hello.rs
-    docker compose run --rm rust sh -c "./hello"
-    docker compose run --rm rust sh -c "printenv"
+    docker compose run --rm rust sh -c " \
+        rustup default stable \
+        && rustc hello.rs \
+        && ./hello \
+        printenv"
 
 }
 

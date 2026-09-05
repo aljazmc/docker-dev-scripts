@@ -5,69 +5,30 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+USER=bevy
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    docker system prune -af --volumes 
-    rm -rf \
-        .cache \
-        .cargo \
-       	.rustup \
-        .Xauthority \
-        Dockerfile \
-        bevy \
-        docker-compose.yml
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
 compose() {
 
-if [[ ! -f Dockerfile ]]; then
-    cat <<EOF > Dockerfile
-FROM debian:latest
-
-ENV PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    g++ \
-    git \
-    pkg-config \
-    libx11-dev \
-    libxi-dev \
-    libasound2-dev \
-    libudev-dev \
-    libxcursor1 \
-    libxkbcommon-x11-0 \
-    libwayland-dev \
-    libxkbcommon-dev \
-    mesa-vulkan-drivers \
-    rustup \
-    sudo
-
-RUN groupadd -g $PROJECT_GID -r $USER
-RUN useradd -u $PROJECT_UID -g $PROJECT_GID --create-home -r $USER
-
-#Change password
-RUN echo "$USER:$USER" | chpasswd
-#Make sudo passwordless
-RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-$USER
-RUN usermod -aG sudo $USER
-
-USER $USER
-WORKDIR /home/$USER
-
-CMD ["/bin/bash"]
-EOF
-fi
-
 if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
-    rust:
+    bevy:
         build: .
         working_dir: /home/$USER
         volumes:
@@ -97,15 +58,15 @@ composehack() {
 
 }
 
-rust() {
+bevy() {
 
-    docker compose run --rm rust sh -c "rustup default stable"
-    docker compose run --rm rust sh -c "git clone https://github.com/bevyengine/bevy \
-	    && cd bevy && \
-	    git checkout latest"
-    docker compose run --rm rust sh -c "cd bevy \
-	    && cargo run --features x11 --example hello_world"
-    docker compose run --rm rust sh -c "printenv"
+    docker compose run --rm bevy sh -c " \
+        rustup default stable \
+        && git clone https://github.com/bevyengine/bevy \
+        && cd bevy \
+        && git checkout latest \
+        && cargo run --features x11 --example hello_world \
+        && printenv"
 
 }
 
@@ -119,7 +80,7 @@ start() {
 
     fi
 
-    rust
+    bevy
 
 }
 

@@ -5,17 +5,21 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+USER=go
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        .cache \
-        docker-compose.yml \
-        main \
-        main.go
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
@@ -24,12 +28,11 @@ compose() {
 if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
-    golang:
-        image: golang:latest
-        working_dir: /usr/src/app
+    go:
+        build: .
+        working_dir: /home/$USER
         volumes:
-            - .:/usr/src/app
-            - .cache:/.cache
+            - .:/home/$USER
 EOF
 fi
 
@@ -44,13 +47,7 @@ composehack() {
 
 }
 
-golang() {
-
-if [[ ! -d .cache ]]; then
-
-    mkdir -p .cache
-
-fi
+go() {
 
 if [[ ! -f main.go ]]; then
     cat<<EOF > main.go
@@ -64,9 +61,10 @@ func main() {
 EOF
 fi
 
-    docker compose run --rm golang go build main.go
-    docker compose run --rm golang sh -c "./main"
-    docker compose run --rm golang sh -c "printenv"
+    docker compose run --rm go sh -c " \
+        go build main.go \
+        && ./main \
+        && printenv"
 
 }
 
@@ -80,7 +78,7 @@ start() {
 
     fi
 
-    golang
+    go
 
 }
 

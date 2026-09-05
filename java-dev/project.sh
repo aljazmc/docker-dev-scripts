@@ -5,16 +5,21 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+USER=java
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        docker-compose.yml \
-        HelloWorld.class \
-        HelloWorld.java
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
@@ -23,11 +28,11 @@ compose() {
 if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
-    java-compiler:
-        image: eclipse-temurin:26-alpine
-        working_dir: /opt/app
+    java:
+        build: .
+        working_dir: /home/$USER
         volumes:
-            - .:/opt/app
+            - .:/home/$USER
 EOF
 fi
 
@@ -42,7 +47,7 @@ composehack() {
 
 }
 
-runjava() {
+java() {
 
 if [[ ! -f HelloWorld.java ]]; then
     cat<<EOF > HelloWorld.java
@@ -55,9 +60,10 @@ public class HelloWorld {
 EOF
 fi
 
-    docker compose run --rm java-compiler javac HelloWorld.java
-    docker compose run --rm java-compiler java HelloWorld
-    docker compose run --rm java-compiler sh -c "printenv"
+    docker compose run --rm java sh -c " \
+        javac HelloWorld.java \
+        && java HelloWorld \
+        && printenv"
 
 }
 
@@ -71,7 +77,7 @@ start() {
 
     fi
 
-    runjava
+    java
 
 }
 

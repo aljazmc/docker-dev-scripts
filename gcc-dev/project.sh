@@ -5,16 +5,21 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+USER=gcc
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        docker-compose.yml \
-        main \
-        main.c
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
@@ -24,10 +29,10 @@ if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     gcc:
-        image: gcc:latest
-        working_dir: /usr/src/app
+        build: .
+        working_dir: /home/$USER
         volumes:
-            - .:/usr/src/app
+            - .:/home/$USER
 EOF
 fi
 
@@ -56,9 +61,10 @@ int main(void)
 EOF
 fi
 
-    docker compose run --rm gcc gcc main.c -o main
-    docker compose run --rm gcc sh -c "./main"
-    docker compose run --rm gcc sh -c "printenv"
+    docker compose run --rm gcc sh -c " \
+        gcc main.c -o main \
+        && ./main \
+        && printenv"
 
 }
 

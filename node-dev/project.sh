@@ -5,65 +5,37 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+USER=node
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        Dockerfile \
-        README.md \
-        dist \
-        docker-compose.yml \
-        node_modules \
-        package.json \
-        yarn.lock \
-        .cache \
-        .editorconfig \
-        .gitattributes \
-        .gitignore \
-        .git \
-        .npm \
-        .pnp.cjs \
-        .pnp.loader.mjs \
-        .vim \
-        .vimrc \
-        .yarn \
-        .yarn/berry \
-        .yarn/bin \
-        .yarn/sdks \
-        .yarn/unplugged \
-        .yarn/install-state.gz \
-        .yarnrc \
-        .yarnrc.yml
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
-
 compose() {
-
-if [[ ! -f Dockerfile ]]; then
-    cat << EOF > Dockerfile
-FROM node:current-alpine
-
-RUN apk update && \
-    apk add git && \
-    npm install -g corepack
-EOF
-fi
 
 if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
     node:
         build: .
-        working_dir: $PWD
+        working_dir: /home/$USER
         volumes:
-            - .:$PWD
+            - .:/home/$USER
         environment:
             COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
-            HOME:                            "$PWD"
+            HOME:                            /home/$USER
             NODE_ENV:                        development
         network_mode: host
 EOF
