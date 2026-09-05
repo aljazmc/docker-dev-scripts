@@ -2,8 +2,9 @@
 
 ## Variables
 
+USER=android
+
 KVMOWNER=$(ls -l /dev/kvm | awk '{print $3}');
-#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 SDK=$(echo /home/"$USER"/sdk)
@@ -13,34 +14,24 @@ if [[ "$OSTYPE" != "linux-gnu"* ]]; then
     exit
 fi
 
-if [[ "$KVMOWNER" != "$USER" ]]; then 
-    echo "'/dev/kvm' is not owned by the current user. Aborting..."
-    exit
-fi
+# if [[ "$KVMOWNER" != "$USER" ]]; then 
+#     echo "'/dev/kvm' is not owned by the current user. Aborting..."
+#     exit
+# fi
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    docker system prune -af --volumes
-    rm -rf \
-        .android \
-        app \
-        .cache \
-        .config \
-        docker-compose.yml \
-        Dockerfile \
-        .emulator_console_auth_token \
-        .gradle \
-        .knownPackages \
-        .kotlin \
-        .npm \
-        sdk \
-        .temp \
-        .yarn \
-        .wget-hsts \
-        ./*.zip
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
@@ -117,23 +108,17 @@ fi
 if [[ ! -f docker-compose.yml ]]; then
   cat <<-EOF > docker-compose.yml
 services:
-    androidsdk:
+    android:
         build: .
         working_dir: /home/$USER
         user: $PROJECT_UID:$PROJECT_GID
         environment:
-            ANDROID_HOME: $SDK
-            ANDROID_USER_HOME: /home/$USER/.android
-            ANDROID_SDK_ROOT: $SDK
             DISPLAY: $DISPLAY
-            GRADLE_HOME: $SDK/gradle-9.0.0/bin
-            GRADLE_USER_HOME: /home/$USER/.gradle
-            PATH: "/home/$USER/app:$SDK/build-tools/36.0.0:$SDK/gradle-9.0.0/bin:$SDK/kotlinc/bin:$SDK/emulator:$SDK/cmdline-tools/latest/bin:$SDK/platform-tools:/opt/node-v24.11.1-linux-x64/bin:\$PATH"
             XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
         volumes:
             - .:/home/$USER
             - /tmp/.X11-unix:/tmp/.X11-unix
-            - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}
+            - /run/user/${PROJECT_UID}:/run/user/1000
             - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
             - ~/.Xauthority:/root/.Xauthority
         devices:
@@ -144,38 +129,40 @@ services:
 EOF
 fi
 
-    docker compose run --rm androidsdk sh -c "wget https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip && \
-        unzip commandlinetools-linux-*_latest.zip cmdline-tools/* -d sdk/cmdline-tools && \
-        cd sdk/cmdline-tools && \
-        mv cmdline-tools latest && \
-        rm ../../commandlinetools-linux-*_latest.zip"
-    docker compose run --rm androidsdk sh -c "wget https://services.gradle.org/distributions/gradle-9.0.0-bin.zip && \
-        unzip gradle-9.0.0-bin.zip -d sdk && \
-        rm gradle-*-bin.zip"
-    docker compose run --rm androidsdk sh -c "wget https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip && \
-        unzip kotlin-compiler-2.2.21.zip -d sdk && \
-        rm kotlin-compiler-*.zip"
-    docker compose run --rm androidsdk sh -c "yes | sdkmanager --licenses"
-    docker compose run --rm androidsdk sh -c "sdkmanager --update && \
-        sdkmanager \
+    docker compose run --rm android sh -c " \
+	wget https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip \
+        && unzip commandlinetools-linux-*_latest.zip cmdline-tools/* -d sdk/cmdline-tools \
+        && cd sdk/cmdline-tools \
+        && mv cmdline-tools latest \
+        && rm ../../commandlinetools-linux-*_latest.zip \
+	&& cd /home/android \
+        && wget https://services.gradle.org/distributions/gradle-9.0.0-bin.zip \
+        && unzip gradle-9.0.0-bin.zip -d sdk \
+        && rm gradle-*-bin.zip \
+        && wget https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip \
+        && unzip kotlin-compiler-2.2.21.zip -d sdk \
+        && rm kotlin-compiler-*.zip \
+        && yes | sdkmanager --licenses \
+        && sdkmanager --update \
+        && sdkmanager \
             'build-tools;36.0.0' \
             'cmake;3.22.1' \
             'emulator' \
             'ndk;27.1.12297006' \
             'platform-tools' \
             'platforms;android-36' \
-            'system-images;android-36;google_apis;x86_64' "
-    docker compose run --rm androidsdk sh -c "echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36;google_apis;x86_64'"
+            'system-images;android-36;google_apis;x86_64' \
+        && echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36;google_apis;x86_64'"
 
-    if [[ "$DESKTOP_SESSION" = "mate" ]]; then
+    if [[ "$DESKTOP_SESSION" = "lightdm-xsession" ]]; then
 
-        mate-terminal -- sh -c "docker compose run --rm androidsdk sh -c 'yes | npx @react-native-community/cli init app'"
+        mate-terminal -- sh -c "docker compose run --rm android sh -c 'yes | npx @react-native-community/cli init app'"
         sleep 60
-        mate-terminal -- sh -c "docker compose run --rm androidsdk sh -c 'emulator -avd 1'"
+        mate-terminal -- sh -c "docker compose run --rm android sh -c 'emulator -avd 1'"
         sleep 60
-        mate-terminal -- sh -c "docker compose run --rm androidsdk sh -c 'cd app && node_modules/.bin/react-native start'"
+        mate-terminal -- sh -c "docker compose run --rm android sh -c 'cd app && node_modules/.bin/react-native start'"
         sleep 60
-        mate-terminal -- sh -c "docker compose run --rm androidsdk sh -c 'cd app && npx react-native run-android'"
+        mate-terminal -- sh -c "docker compose run --rm android sh -c 'cd app && npx react-native run-android'"
 
     else 
 
