@@ -5,16 +5,21 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+USER=python
 
 ## Functions
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
-    rm -rf \
-        __pycache__ \
-        docker-compose.yml \
-        hello.py
+docker compose down -v --rmi all --remove-orphans
+docker system prune -af --volumes
+
+find . -mindepth 1 -maxdepth 1 \
+    | sed "
+        /Dockerfile/d;
+        /project.sh/d;
+    " \
+    | xargs -I {} rm -rf {}
 
 }
 
@@ -23,11 +28,11 @@ compose() {
 if [[ ! -f docker-compose.yml ]]; then
     cat << EOF > docker-compose.yml
 services:
-    python-dev:
-        image: python:latest
-        working_dir: /usr/src/app
+    python:
+        build: .
+        working_dir: /home/$USER
         volumes:
-            - .:/usr/src/app
+            - .:/home/$USER
 EOF
 fi
 
@@ -50,9 +55,10 @@ print('Hello, world!')
 EOF
 fi
 
-    docker compose run --rm python-dev sh -c "python -m py_compile hello.py"
-    docker compose run --rm python-dev sh -c "python __pycache__/hello.cpython-314.pyc"
-    docker compose run --rm python-dev sh -c "printenv"
+    docker compose run --rm python sh -c " \
+        python3 -m py_compile hello.py \
+        && python3 __pycache__/hello.cpython-313.pyc \
+        && printenv"
 
 }
 
