@@ -11,22 +11,22 @@ USER=python
 
 clean() {
 
-docker compose down -v --rmi all --remove-orphans
-docker system prune -af --volumes
+    docker compose down -v --rmi all --remove-orphans
+    docker system prune -af --volumes
 
-find . -mindepth 1 -maxdepth 1 \
-    | sed "
-        /Dockerfile/d;
-        /project.sh/d;
-    " \
-    | xargs -I {} rm -rf {}
+    find . -mindepth 1 -maxdepth 1 \
+        | sed "
+            /Dockerfile/d;
+            /project.sh/d;
+        " \
+        | xargs -I {} rm -rf {}
 
 }
 
 compose() {
 
-if [[ ! -f docker-compose.yml ]]; then
-    cat << EOF > docker-compose.yml
+    if [[ ! -f docker-compose.yml ]]; then
+        cat << EOF > docker-compose.yml
 services:
     python:
         build: .
@@ -34,13 +34,13 @@ services:
         volumes:
             - .:/home/$USER
 EOF
-fi
+    fi
 
 }
 
 composehack() {
 
-    if  ! grep -q "user" "docker-compose.yml"; then
+    if ! grep -q "user" "docker-compose.yml"; then
         echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
         sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
     fi
@@ -49,15 +49,15 @@ composehack() {
 
 python() {
 
-if [[ ! -f hello.py ]]; then
-    cat<<EOF > hello.py
+    if [[ ! -f hello.py ]]; then
+        cat << EOF > hello.py
 print('Hello, world!')
 EOF
-fi
+    fi
 
     docker compose run --rm python sh -c " \
-        python3 -m py_compile hello.py \
-        && python3 __pycache__/hello.cpython-313.pyc \
+        python3 -m compileall -b -q hello.py \
+        && python3 hello.pyc \
         && printenv"
 
 }
