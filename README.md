@@ -14,6 +14,15 @@ Scripts to quickly setup dockerized development environments
 * Linux system with bash shell
 * Docker (with docker compose plugin) installed and running
 
+## > Structure
+
+Each environment lives in its own subdirectory and consists of:
+
+* `Dockerfile` - builds the development image (except `wordpress-dev`, which uses prebuilt images)
+* `project.sh` - generates `docker-compose.yml` and project files, then starts or cleans up the environment
+
+On GNU/Linux, `project.sh` adds your user and group id to `docker-compose.yml`, so generated files are owned by you and not by root.
+
 ## > Example
 
 Use case for node development environment:
@@ -36,13 +45,13 @@ cd node-dev
 ```
 
 > [!CAUTION]
-> Function "clean" is used in the development of "project.sh" script to remove **ALL** generated files and folders. When developing your own project don't forget to change it!
+> Function "clean" is used in the development of "project.sh" script to remove **ALL** generated files and folders (everything except `Dockerfile` and `project.sh`). It also runs `docker system prune -af --volumes`, which removes **ALL** unused Docker images, containers, networks and volumes on your system, not only the ones belonging to this project. When developing your own project don't forget to change it!
 
 ## > Environments:
 
 <table border="0">
     <tr>
-    <td>androidsdk-dev</td>
+    <td>android-dev</td>
     <td>bevy-dev</td>
     </tr>
     <tr>
