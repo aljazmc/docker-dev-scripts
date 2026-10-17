@@ -2,6 +2,7 @@
 
 ## Variables
 
+#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 USER=godot
@@ -10,24 +11,22 @@ USER=godot
 
 clean() {
 
-docker compose down -v --rmi all --remove-orphans
-docker system prune -af --volumes
+    docker compose down -v --rmi all --remove-orphans
+    docker system prune -af --volumes
 
-find . -mindepth 1 -maxdepth 1 \
-    | sed "
-        /Dockerfile/d;
-        /project.sh/d;
-    " \
-    | xargs -I {} rm -rf {}
+    find . -mindepth 1 -maxdepth 1 \
+        | sed "
+            /Dockerfile/d;
+            /project.sh/d;
+        " \
+        | xargs -I {} rm -rf {}
 
 }
 
-
-
 compose() {
 
-if [[ ! -f docker-compose.yml ]]; then
-    cat << EOF > docker-compose.yml
+    if [[ ! -f docker-compose.yml ]]; then
+        cat << EOF > docker-compose.yml
 services:
     godot:
         build: .
@@ -43,16 +42,21 @@ services:
             XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
         devices:
             - /dev/dri:/dev/dri
+            - /dev/kvm:/dev/kvm
             - /dev/snd:/dev/snd
+        group_add:
+            - "${KVM_GID:-993}"
+            - "${RENDER_GID:-992}"
+            - "${VIDEO_GID:-44}"
         network_mode: host
 EOF
-fi
+    fi
 
 }
 
 composehack() {
 
-    if  ! grep -q "user\:" "docker-compose.yml"; then
+    if ! grep -q "user\:" "docker-compose.yml"; then
         echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
         sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
     fi
