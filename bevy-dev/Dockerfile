@@ -41,7 +41,9 @@ libraries=(
     libuv1-dev
     libvorbis-dev
     libvulkan-dev
+    libxkbcommon-x11-0
     mesa-common-dev
+    mesa-vulkan-drivers
     rustup
 )
 apt-get update
