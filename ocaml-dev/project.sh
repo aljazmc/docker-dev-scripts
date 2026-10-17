@@ -9,7 +9,7 @@ fi
 
 ## Check if Docker compose plugin is installed
 
-if [[ ! -x "$(command -v compose)" ]]; then
+if ! docker compose version > /dev/null 2>&1; then
     echo "Compose plugin is not installed. Exiting..."
     exit
 fi
@@ -25,57 +25,84 @@ USER=ocaml
 
 clean() {
 
-docker compose down -v --rmi all --remove-orphans
-docker system prune -af --volumes
+    docker compose down -v --rmi all --remove-orphans
+    docker system prune -af --volumes
 
-find . -mindepth 1 -maxdepth 1 \
-    | sed "
-        /Dockerfile/d;
-        /project.sh/d;
-    " \
-    | xargs -I {} rm -rf {}
+    find . -mindepth 1 -maxdepth 1 \
+        | sed "
+            /Dockerfile/d;
+            /project.sh/d;
+        " \
+        | xargs -I {} rm -rf {}
 
 }
 
-start() {
+compose() {
 
-if [[ ! -f docker-compose.yml ]]; then
-    cat <<-EOF > docker-compose.yml
+    if [[ ! -f docker-compose.yml ]]; then
+        cat << EOF > docker-compose.yml
 services:
     ocaml:
         build: .
-        user: $PROJECT_UID:$PROJECT_GID
         working_dir: /home/$USER
-        environment:
-            DISPLAY: $DISPLAY
-            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
         volumes:
             - .:/home/$USER
             - /tmp/.X11-unix:/tmp/.X11-unix
-            - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}
-            - ~/.Xauthority:/root/.Xauthority
+            - /run/user/$PROJECT_UID:/run/user/$PROJECT_UID
+            - ~/.Xauthority:/home/$USER/.Xauthority
+        environment:
+            DISPLAY: $DISPLAY
+            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
         devices:
             - /dev/dri:/dev/dri
             - /dev/snd:/dev/snd
         network_mode: host
 EOF
-fi
+    fi
 
-if [ ! -d .opam ]; then
+}
 
-   docker compose run --rm ocaml sh -c " \
-        yes | opam init --disable-sandboxing \
-        && yes | opam config list \
-        && yes | opam install core \
-	&& echo "test -r '/home/ocaml/.opam/opam-init/init.sh' && . '/home/ocaml/.opam/opam-init/init.sh' > /dev/null 2> /dev/null || true" >> ~/.profile \
-        && dune init proj helloworld"
+composehack() {
 
-fi
+    if ! grep -q "user\:" "docker-compose.yml"; then
+        echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
+    fi
 
-    docker compose run --rm ocaml sh -c "cd helloworld \
+}
+
+opam() {
+
+    if [[ ! -d .opam ]]; then
+        docker compose run --rm ocaml sh -c " \
+            yes | opam init --disable-sandboxing \
+            && yes | opam config list \
+            && yes | opam install core \
+            && echo \"test -r '/home/$USER/.opam/opam-init/init.sh' && . '/home/$USER/.opam/opam-init/init.sh' > /dev/null 2> /dev/null || true\" >> ~/.profile"
+    fi
+
+}
+
+ocaml() {
+
+    if [[ ! -d helloworld ]]; then
+        docker compose run --rm ocaml sh -c "dune init proj helloworld"
+    fi
+
+    docker compose run --rm ocaml sh -c " \
+        cd helloworld \
         && dune build \
         && dune exec helloworld \
         && printenv"
+
+}
+
+start() {
+
+    compose
+    composehack
+    opam
+    ocaml
 
 }
 
