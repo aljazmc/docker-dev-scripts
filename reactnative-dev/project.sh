@@ -1,174 +1,133 @@
 #!/bin/bash
 
-## Variables
-
-USER=android
-
-KVMOWNER=$(ls -l /dev/kvm | awk '{print $3}');
-PROJECT_UID=$(id -u)
-PROJECT_GID=$(id -g)
-SDK=$(echo /home/"$USER"/sdk)
-
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
     echo "This script works only on GNU/Linux systems"
     exit
 fi
 
-# if [[ "$KVMOWNER" != "$USER" ]]; then 
-#     echo "'/dev/kvm' is not owned by the current user. Aborting..."
-#     exit
-# fi
+## Variables
+
+#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
+PROJECT_UID=$(id -u)
+PROJECT_GID=$(id -g)
+USER=android
+
+CMDLINE_TOOLS_VERSION=13114758
+GRADLE_VERSION=9.0.0 ## keep in sync with GRADLE_HOME and PATH in Dockerfile
+KOTLIN_VERSION=2.2.21
+SYSTEM_IMAGE="system-images;android-36;google_apis;x86_64"
 
 ## Functions
 
 clean() {
 
-docker compose down -v --rmi all --remove-orphans
-docker system prune -af --volumes
+    docker compose down -v --rmi all --remove-orphans
+    docker system prune -af --volumes
 
-find . -mindepth 1 -maxdepth 1 \
-    | sed "
-        /Dockerfile/d;
-        /project.sh/d;
-    " \
-    | xargs -I {} rm -rf {}
+    find . -mindepth 1 -maxdepth 1 \
+        | sed "
+            /Dockerfile/d;
+            /project.sh/d;
+        " \
+        | xargs -I {} rm -rf {}
+
+}
+
+compose() {
+
+    if [[ ! -f docker-compose.yml ]]; then
+        mkdir -p .cache
+        cat << EOF > docker-compose.yml
+services:
+    android:
+        build: .
+        working_dir: /home/$USER
+        volumes:
+            - .:/home/$USER
+            - /tmp/.X11-unix:/tmp/.X11-unix
+            - /run/user/$PROJECT_UID:/run/user/$PROJECT_UID
+            - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
+            - ~/.Xauthority:/home/$USER/.Xauthority
+        environment:
+            DISPLAY: $DISPLAY
+            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
+        devices:
+            - /dev/dri:/dev/dri
+            - /dev/kvm:/dev/kvm
+            - /dev/snd:/dev/snd
+        group_add:
+            - "${KVM_GID:-993}"
+        network_mode: host
+EOF
+    fi
+
+}
+
+composehack() {
+
+    if ! grep -q "user\:" "docker-compose.yml"; then
+        echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
+    fi
+
+}
+
+sdk() {
+
+    if [[ ! -d sdk/cmdline-tools/latest ]]; then
+        mkdir -p sdk/cmdline-tools
+        docker compose run --rm android sh -c " \
+            wget https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip \
+            && unzip commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip 'cmdline-tools/*' -d sdk/cmdline-tools \
+            && mv sdk/cmdline-tools/cmdline-tools sdk/cmdline-tools/latest \
+            && rm commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip \
+            && wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip \
+            && unzip gradle-${GRADLE_VERSION}-bin.zip -d sdk \
+            && rm gradle-${GRADLE_VERSION}-bin.zip \
+            && wget https://github.com/JetBrains/kotlin/releases/download/v${KOTLIN_VERSION}/kotlin-compiler-${KOTLIN_VERSION}.zip \
+            && unzip kotlin-compiler-${KOTLIN_VERSION}.zip -d sdk \
+            && rm kotlin-compiler-${KOTLIN_VERSION}.zip \
+            && yes | sdkmanager --licenses \
+            && sdkmanager --update \
+            && sdkmanager \
+                'build-tools;36.0.0' \
+                'cmake;3.22.1' \
+                'emulator' \
+                'ndk;27.1.12297006' \
+                'platform-tools' \
+                'platforms;android-36' \
+                '$SYSTEM_IMAGE' \
+            && echo 'no' | avdmanager create avd -n 1 -k '$SYSTEM_IMAGE'"
+    fi
+
+}
+
+reactnative() {
+
+    if ! command -v mate-terminal > /dev/null; then
+        echo "Install mate-terminal to be able to start this development environment!"
+        exit
+    fi
+
+    if [[ ! -f app/package.json ]]; then
+        mate-terminal -- sh -c "docker compose run --rm android sh -c 'yes | npx @react-native-community/cli init app'"
+        sleep 60
+    fi
+
+    mate-terminal -- sh -c "docker compose run --rm android sh -c 'emulator -avd 1'"
+    sleep 60
+    mate-terminal -- sh -c "docker compose run --rm android sh -c 'cd app && node_modules/.bin/react-native start'"
+    sleep 60
+    mate-terminal -- sh -c "docker compose run --rm android sh -c 'cd app && npx react-native run-android'"
 
 }
 
 start() {
 
-    mkdir -p app sdk/cmdline-tools
-
-if [[ ! -f Dockerfile ]]; then
-  cat <<EOF > Dockerfile
-FROM debian:bookworm
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    default-jdk \
-    libpulse-dev \
-    libxcb-cursor-dev \
-    libxkbfile-dev \
-    libfontconfig1-dev \
-    libfreetype-dev \
-    libgtk-3-dev \
-    libx11-dev \
-    libx11-xcb-dev \
-    libxcb-cursor-dev \
-    libxcb-glx0-dev \
-    libxcb-icccm4-dev \
-    libxcb-image0-dev \
-    libxcb-keysyms1-dev \
-    libxcb-randr0-dev \
-    libxcb-render-util0-dev \
-    libxcb-shape0-dev \
-    libxcb-shm0-dev \
-    libxcb-sync-dev \
-    libxcb-util-dev \
-    libxcb-xfixes0-dev \
-    libxcb-xkb-dev \
-    libxcb1-dev \
-    libxext-dev \
-    libxfixes-dev \
-    libxi-dev \
-    libxkbcommon-dev \
-    libxkbcommon-x11-dev \
-    libxrender-dev \
-    qemu-system-x86 \
-    sudo \
-    tar \
-    udev \
-    unzip \
-    wget \
-    xz-utils \
-    zip \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN cd /opt/ && \
-    wget https://nodejs.org/dist/v24.11.1/node-v24.11.1-linux-x64.tar.xz && \
-    tar xf node-v24.11.1-linux-x64.tar.xz
-
-RUN groupadd -g $PROJECT_GID -r $USER
-RUN useradd -u $PROJECT_UID -g $PROJECT_GID --create-home -r $USER
-
-#Change password
-RUN echo "$USER:$USER" | chpasswd
-#Make sudo passwordless
-RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-$USER
-RUN usermod -aG sudo $USER
-RUN usermod -aG kvm $USER
-
-USER $USER
-WORKDIR /home/$USER
-
-CMD ["/bin/bash"]
-EOF
-fi
-
-if [[ ! -f docker-compose.yml ]]; then
-  cat <<-EOF > docker-compose.yml
-services:
-    android:
-        build: .
-        working_dir: /home/$USER
-        user: $PROJECT_UID:$PROJECT_GID
-        environment:
-            DISPLAY: $DISPLAY
-            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
-        volumes:
-            - .:/home/$USER
-            - /tmp/.X11-unix:/tmp/.X11-unix
-            - /run/user/${PROJECT_UID}:/run/user/1000
-            - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
-            - ~/.Xauthority:/root/.Xauthority
-        devices:
-            - /dev/dri:/dev/dri
-            - /dev/kvm:/dev/kvm
-            - /dev/snd:/dev/snd
-        network_mode: host
-EOF
-fi
-
-    docker compose run --rm android sh -c " \
-	wget https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip \
-        && unzip commandlinetools-linux-*_latest.zip cmdline-tools/* -d sdk/cmdline-tools \
-        && cd sdk/cmdline-tools \
-        && mv cmdline-tools latest \
-        && rm ../../commandlinetools-linux-*_latest.zip \
-	&& cd /home/android \
-        && wget https://services.gradle.org/distributions/gradle-9.0.0-bin.zip \
-        && unzip gradle-9.0.0-bin.zip -d sdk \
-        && rm gradle-*-bin.zip \
-        && wget https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip \
-        && unzip kotlin-compiler-2.2.21.zip -d sdk \
-        && rm kotlin-compiler-*.zip \
-        && yes | sdkmanager --licenses \
-        && sdkmanager --update \
-        && sdkmanager \
-            'build-tools;36.0.0' \
-            'cmake;3.22.1' \
-            'emulator' \
-            'ndk;27.1.12297006' \
-            'platform-tools' \
-            'platforms;android-36' \
-            'system-images;android-36;google_apis;x86_64' \
-        && echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36;google_apis;x86_64'"
-
-    if [[ "$DESKTOP_SESSION" = "lightdm-xsession" ]]; then
-
-        mate-terminal -- sh -c "docker compose run --rm android sh -c 'yes | npx @react-native-community/cli init app'"
-        sleep 60
-        mate-terminal -- sh -c "docker compose run --rm android sh -c 'emulator -avd 1'"
-        sleep 60
-        mate-terminal -- sh -c "docker compose run --rm android sh -c 'cd app && node_modules/.bin/react-native start'"
-        sleep 60
-        mate-terminal -- sh -c "docker compose run --rm android sh -c 'cd app && npx react-native run-android'"
-
-    else 
-
-        echo "Install mate-terminal to be able to start this development environment!"
-
-    fi
+    compose
+    composehack
+    sdk
+    reactnative
 
 }
 
