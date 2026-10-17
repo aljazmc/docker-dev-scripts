@@ -2,41 +2,120 @@
 
 ## Variables
 
-USER=android
-
-KVMOWNER=$(ls -l /dev/kvm | awk '{print $3}')
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
-SDK=$(echo /home/"$USER"/sdk)
+USER=android
 
-# if [[ "$KVMOWNER" != "$(id -u):$(id -g)" ]]; then 
-#     echo "'/dev/kvm' is not owned by the current user. Aborting..."
-#     exit
-# fi
+CMDLINE_TOOLS_VERSION=14742923
+GRADLE_VERSION=9.5.1 ## keep in sync with GRADLE_HOME and PATH in Dockerfile
+KOTLIN_VERSION=2.4.0
+SYSTEM_IMAGE="system-images;android-36;default;x86_64"
 
 ## Functions
 
 clean() {
 
-docker compose down -v --rmi all --remove-orphans
-docker system prune -af --volumes
+    docker compose down -v --rmi all --remove-orphans
+    docker system prune -af --volumes
 
-find . -mindepth 1 -maxdepth 1 \
-    | sed "
-        /Dockerfile/d;
-        /project.sh/d;
-    " \
-    | xargs -I {} rm -rf {}
+    find . -mindepth 1 -maxdepth 1 \
+        | sed "
+            /Dockerfile/d;
+            /project.sh/d;
+        " \
+        | xargs -I {} rm -rf {}
+
+}
+
+compose() {
+
+    if [[ ! -f docker-compose.yml ]]; then
+        cat << EOF > docker-compose.yml
+services:
+    android:
+        build: .
+        working_dir: /home/$USER
+        volumes:
+            - .:/home/$USER
+            - /tmp/.X11-unix:/tmp/.X11-unix
+            - /run/user/$PROJECT_UID:/run/user/$PROJECT_UID
+            - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
+            - ~/.Xauthority:/home/$USER/.Xauthority
+        environment:
+            DISPLAY: $DISPLAY
+            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
+        devices:
+            - /dev/dri:/dev/dri
+            - /dev/kvm:/dev/kvm
+            - /dev/snd:/dev/snd
+        group_add:
+            - "${KVM_GID:-993}"
+        network_mode: host
+EOF
+    fi
+
+}
+
+composehack() {
+
+    if ! grep -q "user\:" "docker-compose.yml"; then
+        echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
+    fi
+
+}
+
+sdk() {
+
+    if [[ ! -d sdk/cmdline-tools/latest ]]; then
+        mkdir -p sdk/cmdline-tools
+        docker compose run --rm android sh -c " \
+            wget https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip \
+            && unzip commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip 'cmdline-tools/*' -d sdk/cmdline-tools \
+            && mv sdk/cmdline-tools/cmdline-tools sdk/cmdline-tools/latest \
+            && rm commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip \
+            && wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip \
+            && unzip gradle-${GRADLE_VERSION}-bin.zip -d sdk \
+            && rm gradle-${GRADLE_VERSION}-bin.zip \
+            && wget https://github.com/JetBrains/kotlin/releases/download/v${KOTLIN_VERSION}/kotlin-compiler-${KOTLIN_VERSION}.zip \
+            && unzip kotlin-compiler-${KOTLIN_VERSION}.zip -d sdk \
+            && rm kotlin-compiler-${KOTLIN_VERSION}.zip \
+            && yes | sdkmanager --licenses \
+            && sdkmanager --update \
+            && sdkmanager \
+                'build-tools;35.0.0' \
+                'cmake;4.1.2' \
+                'emulator' \
+                'ndk;30.0.14904198' \
+                'platform-tools' \
+                'platforms;android-36' \
+                '$SYSTEM_IMAGE' \
+            && sdkmanager --list \
+            && echo 'no' | avdmanager create avd -n 1 -k '$SYSTEM_IMAGE'"
+    fi
+
+}
+
+app() {
+
+    if [[ ! -f app/gradlew ]]; then
+        mkdir -p app
+        docker compose run --rm android sh -c " \
+            cd app \
+            && yes | gradle init --type kotlin-application --dsl kotlin"
+    fi
+
+    confighack
 
 }
 
 confighack() {
 
     mkdir -p app/app/src/main/resources/values
-  
+
     if [[ ! -f app/app/src/main/AndroidManifest.xml ]]; then
-    cat <<EOF > app/app/src/main/AndroidManifest.xml
+        cat << EOF > app/app/src/main/AndroidManifest.xml
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application android:label="App" android:allowBackup="false">
@@ -49,18 +128,18 @@ confighack() {
     </application>
 </manifest>
 EOF
-    {
-        echo "org.gradle.configuration-cache=true"; \
-        echo "android.useAndroidX=true"; \
-    } >> app/gradle.properties
-    cat <<EOF > app/build.gradle.kts
+        {
+            echo "org.gradle.configuration-cache=true"
+            echo "android.useAndroidX=true"
+        } >> app/gradle.properties
+        cat << EOF > app/build.gradle.kts
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.compose.compiler) apply false
 }
 EOF
-    cat <<EOF > app/app/build.gradle.kts
+        cat << EOF > app/app/build.gradle.kts
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -100,7 +179,7 @@ dependencies {
 
 }
 EOF
-    cat <<"EOF" > app/settings.gradle.kts
+        cat << "EOF" > app/settings.gradle.kts
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -119,7 +198,7 @@ dependencyResolutionManagement {
 rootProject.name = ("app")
 include(":app")
 EOF
-    cat <<EOF > app/gradle/libs.versions.toml
+        cat << EOF > app/gradle/libs.versions.toml
 [versions]
 activity = "1.11.0"
 activity-compose = "1.11.0"
@@ -139,7 +218,7 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 EOF
-    cat <<EOF > app/app/src/main/kotlin/org/example/App.kt
+        cat << EOF > app/app/src/main/kotlin/org/example/App.kt
 package org.example
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -155,7 +234,7 @@ class App : ComponentActivity() {
     }
 }
 EOF
-    cat <<EOF > app/app/src/test/kotlin/org/example/AppTest.kt
+        cat << EOF > app/app/src/test/kotlin/org/example/AppTest.kt
 package org.example
 
 import kotlin.test.Test
@@ -167,75 +246,35 @@ class AppTest {
     }
 }
 EOF
-fi
+    fi
+
+}
+
+android() {
+
+    mate-terminal -- sh -c "docker compose run --rm android sh -c 'emulator -avd 1'"
+
+    docker compose run --rm android sh -c "cd app && gradlew tasks"
+    docker compose run --rm android sh -c "cd app && gradlew build"
+    docker compose run --rm android sh -c "cd app && gradlew installDebug"
+    docker compose run --rm android sh -c "adb shell 'am start -n org.example/org.example.App'"
 
 }
 
 start() {
 
-    mkdir -p app sdk/cmdline-tools
+    compose
 
-if [[ ! -f docker-compose.yml ]]; then
-    cat <<-EOF > docker-compose.yml
-services:
-    android:
-        build: .
-        working_dir: /home/$USER
-        user: $PROJECT_UID:$PROJECT_GID
-        environment:
-            DISPLAY: $DISPLAY
-            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
-        volumes:
-            - .:/home/$USER
-            - /tmp/.X11-unix:/tmp/.X11-unix
-            - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}
-            - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
-            - ~/.Xauthority:/root/.Xauthority
-        devices:
-            - /dev/dri:/dev/dri
-            - /dev/kvm:/dev/kvm
-            - /dev/snd:/dev/snd
-        network_mode: host
-EOF
-fi
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
-    docker compose run --rm android sh -c " \
-        wget https://dl.google.com/android/repository/commandlinetools-linux-14742923_latest.zip \
-        && unzip commandlinetools-linux-*_latest.zip cmdline-tools/* -d sdk/cmdline-tools \
-        && cd sdk/cmdline-tools \
-        && mv cmdline-tools latest \
-        && rm ../../commandlinetools-linux-*_latest.zip \
-	&& cd /home/android \
-        && wget https://services.gradle.org/distributions/gradle-9.5.1-bin.zip \
-        && unzip gradle-9.5.1-bin.zip -d sdk \
-        && rm gradle-*-bin.zip \
-        && wget https://github.com/JetBrains/kotlin/releases/download/v2.4.0/kotlin-compiler-2.4.0.zip \
-        && unzip kotlin-compiler-2.4.0.zip -d sdk \
-        && rm kotlin-compiler-*.zip \
-        && yes | sdkmanager --licenses \
-        && sdkmanager --update \
-        && sdkmanager \
-            'build-tools;35.0.0' \
-            'cmake;4.1.2' \
-            'emulator' \
-            'ndk;30.0.14904198' \
-            'platform-tools' \
-            'platforms;android-36' \
-            'system-images;android-36;default;x86_64' \
-	&& sdkmanager --list \
-        && cd app \
-	&& yes | gradle init --type kotlin-application --dsl kotlin \
-        && echo 'no' | avdmanager create avd -n 1 -k 'system-images;android-36;default;x86_64'"
-  
-    mate-terminal -- sh -c "docker compose run --rm android sh -c 'emulator -avd 1'"
-  
-    confighack
-    
-    docker compose run --rm android sh -c "cd app && gradlew tasks"
-    docker compose run --rm android sh -c "cd app && gradlew build"
-    docker compose run --rm android sh -c "cd app && gradlew installDebug"
-    docker compose run --rm android sh -c "adb shell 'am start -n org.example/org.example.App'"
-  
+        composehack
+
+    fi
+
+    sdk
+    app
+    android
+
 }
 
 "$1"
