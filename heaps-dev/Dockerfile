@@ -2,14 +2,14 @@ FROM debian:latest
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
-ENV DEBIAN_FRONTEND=noninteractive \ 
+ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/usr/src/hashlink:$PATH" \
     USER=heaps
 
 RUN <<'EOT'
 runtimeDeps=(
     ca-certificates
-    git 
+    git
     haxe
     libapache2-mod-neko
     libgc1
@@ -23,7 +23,7 @@ runtimeDeps=(
     neko
     neko-dev
     pipewire
-    pipewire-audio-client-libraries 
+    pipewire-audio-client-libraries
     pipewire-pulse
     rsync
     sudo

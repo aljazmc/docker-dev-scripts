@@ -16,24 +16,76 @@ USER=heaps
 
 clean() {
 
-docker compose down -v --rmi all --remove-orphans
-docker system prune -af --volumes
+    docker compose down -v --rmi all --remove-orphans
+    docker system prune -af --volumes
 
-find . -mindepth 1 -maxdepth 1 \
-    | sed "
-        /Dockerfile/d;
-        /project.sh/d;
-    " \
-    | xargs -I {} rm -rf {}
+    find . -mindepth 1 -maxdepth 1 \
+        | sed "
+            /Dockerfile/d;
+            /project.sh/d;
+        " \
+        | xargs -I {} rm -rf {}
 
 }
 
-start() {
+compose() {
 
-    mkdir -p src haxelib
+    if [[ ! -f docker-compose.yml ]]; then
+        cat << EOF > docker-compose.yml
+services:
+    heaps:
+        build: .
+        working_dir: /home/$USER
+        volumes:
+            - .:/home/$USER
+            - /tmp/.X11-unix:/tmp/.X11-unix
+            - /run/user/$PROJECT_UID:/run/user/$PROJECT_UID
+            - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
+            - ~/.Xauthority:/home/$USER/.Xauthority
+        environment:
+            DISPLAY: $DISPLAY
+            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
+        devices:
+            - /dev/dri:/dev/dri
+            - /dev/snd:/dev/snd
+        network_mode: host
+EOF
+    fi
 
-if [[ ! -f compile.hxml ]]; then
-    cat <<-EOF > compile.hxml
+}
+
+composehack() {
+
+    if ! grep -q "user\:" "docker-compose.yml"; then
+        echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
+        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
+    fi
+
+}
+
+haxelib() {
+
+    mkdir -p haxelib
+
+    docker compose run --rm heaps bash -c " \
+        haxelib setup haxelib \
+        && haxelib --global update haxelib \
+        && haxelib fixrepo"
+
+    for lib in format heaps hlopenal hlsdl hldx; do
+        if [[ ! -d haxelib/$lib ]]; then
+            docker compose run --rm heaps bash -c "haxelib install $lib"
+        fi
+    done
+
+}
+
+heaps() {
+
+    mkdir -p src
+
+    if [[ ! -f compile.hxml ]]; then
+        cat << EOF > compile.hxml
 -cp src
 -lib format
 -lib heaps
@@ -41,33 +93,10 @@ if [[ ! -f compile.hxml ]]; then
 -hl hello.hl
 -main Main
 EOF
-fi
+    fi
 
-if [[ ! -f docker-compose.yml ]]; then
-    cat <<-EOF > docker-compose.yml
-services:
-    heaps:
-        build: .
-        working_dir: /home/$USER
-        user: $PROJECT_UID:$PROJECT_GID
-        environment:
-            DISPLAY: $DISPLAY
-            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
-        volumes:
-            - .:/home/$USER
-            - /tmp/.X11-unix:/tmp/.X11-unix
-            - /run/user/${PROJECT_UID}:/run/user/${PROJECT_UID}
-            - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
-            - ~/.Xauthority:/home/$USER/.Xauthority
-        devices:
-            - /dev/dri:/dev/dri
-            - /dev/snd:/dev/snd
-        network_mode: host
-EOF
-fi
-
-if [[ ! -f src/Main.hx ]]; then
-    cat <<-EOF > src/Main.hx
+    if [[ ! -f src/Main.hx ]]; then
+        cat << EOF > src/Main.hx
 class Main extends hxd.App {
     override function init() {
         var tf = new h2d.Text(hxd.res.DefaultFont.get(), s2d);
@@ -78,22 +107,20 @@ class Main extends hxd.App {
     }
 }
 EOF
-fi
-
-docker compose run --rm heaps bash -c " \
-    haxelib setup haxelib \
-    && haxelib --global update haxelib \
-    && haxelib fixrepo"
-
-[ ! -d haxelib/format 	]   && docker compose run --rm heaps bash -c "haxelib install format"
-[ ! -d haxelib/heaps 	]   && docker compose run --rm heaps bash -c "haxelib install heaps"
-[ ! -d haxelib/hlopenal ]   && docker compose run --rm heaps bash -c "haxelib install hlopenal"
-[ ! -d haxelib/hlsdl 	]   && docker compose run --rm heaps bash -c "haxelib install hlsdl"
-[ ! -d haxelib/hldx 	]   && docker compose run --rm heaps bash -c "haxelib install hldx"
+    fi
 
     docker compose run --rm heaps haxe compile.hxml
     docker compose run --rm heaps hl hello.hl
     docker compose run --rm heaps sh -c "printenv"
+
+}
+
+start() {
+
+    compose
+    composehack
+    haxelib
+    heaps
 
 }
 
