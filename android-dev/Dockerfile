@@ -13,6 +13,7 @@ ENV ANDROID_HOME="/home/$USER/sdk" \
     LANG=C \
     LC_ALL=C \
     PATH="/home/$USER/app:/home/$USER/sdk/platform-tools:/home/$USER/sdk/build-tools/35.0.0:/home/$USER/sdk/cmdline-tools/latest/bin:/home/$USER/sdk/emulator:/home/$USER/sdk/gradle-9.5.1/bin:/home/$USER/sdk/kotlinc/bin:$PATH"
+
 RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
