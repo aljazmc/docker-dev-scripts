@@ -10,6 +10,10 @@ fi
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
+VIDEO_GID=$(stat -c %g /dev/dri/card* 2>/dev/null | head -n 1)
+AUDIO_GID=$(stat -c %g /dev/snd/controlC* 2>/dev/null | head -n 1)
+GROUP_ADD=$(printf '%s\n' $RENDER_GID $VIDEO_GID $AUDIO_GID | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
 USER=heaps
 
 ## Functions
@@ -48,7 +52,9 @@ services:
         devices:
             - /dev/dri:/dev/dri
             - /dev/snd:/dev/snd
-        network_mode: host
+${GROUP_ADD:+        group_add:
+$GROUP_ADD
+}        network_mode: host
 EOF
     fi
 
