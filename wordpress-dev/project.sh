@@ -3,8 +3,8 @@
 ## Variables
 
 PROJECT_NAME=$(basename "$PWD") ## PROJECT_NAME = parent directory
-PROJECT_GID=$(id -g)
 PROJECT_UID=$(id -u)
+PROJECT_GID=$(id -g)
 PHP_VERSION=8.3
 
 ## Functions
@@ -17,22 +17,22 @@ autoload() {
 
 clean() {
 
-docker compose down -v --rmi all --remove-orphans
-docker system prune -af --volumes
+    docker compose down -v --rmi all --remove-orphans
+    docker system prune -af --volumes
 
-find . -mindepth 1 -maxdepth 1 \
-    | sed "
-        /Dockerfile/d;
-        /project.sh/d;
-    " \
-    | xargs -I {} rm -rf {}
+    find . -mindepth 1 -maxdepth 1 \
+        | sed "
+            /Dockerfile/d;
+            /project.sh/d;
+        " \
+        | xargs -I {} rm -rf {}
 
 }
 
 compose() {
 
-if [[ ! -f docker-compose.yml ]]; then
-    cat << EOF > docker-compose.yml
+    if [[ ! -f docker-compose.yml ]]; then
+        cat << EOF > docker-compose.yml
 services:
     composer:
         image: composer:latest
@@ -135,13 +135,13 @@ services:
 volumes:
     db_data:
 EOF
-fi
+    fi
 
 }
 
 composehack() {
 
-    if  ! grep -q "user\:" "docker-compose.yml"; then
+    if ! grep -q "user\:" "docker-compose.yml"; then
         echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
         sed -i "/image\:\ [c,n,p,w]/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
     fi
@@ -150,8 +150,8 @@ composehack() {
 
 configphpunitwatcher() {
 
-if [[ ! -f phpunit-watcher.yml ]]; then
-    cat << EOF > phpunit-watcher.yml
+    if [[ ! -f phpunit-watcher.yml ]]; then
+        cat << EOF > phpunit-watcher.yml
 watch:
     directories:
         - src
@@ -164,14 +164,14 @@ watch:
         arguments: '--stop-on-failure'
         timeout: 180
 EOF
-fi
+    fi
 
 }
 
 gitignore() {
 
-if [[ ! -f .gitignore ]]; then
-    cat << EOF > .gitignore
+    if [[ ! -f .gitignore ]]; then
+        cat << EOF > .gitignore
 ## Docker related
 
 /docker-compose.yml
@@ -228,7 +228,7 @@ wp-signup.php
 wp-trackback.php
 xmlrpc.php
 EOF
-fi
+    fi
 
 }
 
@@ -244,26 +244,27 @@ start() {
 
     configphpunitwatcher
     gitignore
-    
+
     if [[ ! -d src ]]; then
 
         ## Creating directory structure
         mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},tests/{ts,php}}
-      
+
         ## Setting up node related stuff
         docker compose run --rm node yarn init
-      
+
         ## Setting up php related stuff
         docker compose run --rm composer init
-      
+
         docker compose run --rm composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-        docker compose run --rm composer composer require --dev dealerdirect/phpcodesniffer-composer-installer
-        docker compose run --rm composer require --dev composer "squizlabs/php_codesniffer:^3.13"
-        docker compose run --rm composer require --dev composer wp-coding-standards/wpcs
-        docker compose run --rm composer require --dev composer sirbrillig/phpcs-variable-analysis
-        docker compose run --rm composer require --dev phpcompatibility/phpcompatibility-wp
-        docker compose run --rm composer require --dev composer phpunit/phpunit
-        docker compose run --rm composer require --dev composer spatie/phpunit-watcher
+        docker compose run --rm composer require --dev \
+            dealerdirect/phpcodesniffer-composer-installer \
+            "squizlabs/php_codesniffer:^3.13" \
+            wp-coding-standards/wpcs \
+            sirbrillig/phpcs-variable-analysis \
+            phpcompatibility/phpcompatibility-wp \
+            phpunit/phpunit \
+            spatie/phpunit-watcher
         docker compose run --rm phpunit --generate-configuration
         cp vendor/wp-coding-standards/wpcs/phpcs.xml.dist.sample phpcs.xml
 
