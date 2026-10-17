@@ -10,6 +10,11 @@ fi
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+KVM_GID=$(stat -c %g /dev/kvm 2>/dev/null)
+RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
+VIDEO_GID=$(stat -c %g /dev/dri/card* 2>/dev/null | head -n 1)
+AUDIO_GID=$(stat -c %g /dev/snd/controlC* 2>/dev/null | head -n 1)
+GROUP_ADD=$(printf '%s\n' $KVM_GID $RENDER_GID $VIDEO_GID $AUDIO_GID | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
 USER=android
 
 CMDLINE_TOOLS_VERSION=13114758
@@ -55,9 +60,9 @@ services:
             - /dev/dri:/dev/dri
             - /dev/kvm:/dev/kvm
             - /dev/snd:/dev/snd
-        group_add:
-            - "${KVM_GID:-993}"
-        network_mode: host
+${GROUP_ADD:+        group_add:
+$GROUP_ADD
+}        network_mode: host
 EOF
     fi
 
