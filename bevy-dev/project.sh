@@ -1,15 +1,30 @@
 #!/bin/bash
 
+## Check if OS is GNU/Linux
+
+if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+    echo "Script runs only on GNU/Linux OS. Exiting..."
+    exit
+fi
+
+## Check if Docker compose plugin is installed
+
+if ! docker compose version > /dev/null 2>&1; then
+    echo "Compose plugin is not installed. Exiting..."
+    exit
+fi
+
 ## Variables
 
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
-KVM_GID=$(stat -c %g /dev/kvm 2>/dev/null)
 RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
 VIDEO_GID=$(stat -c %g /dev/dri/card* 2>/dev/null | head -n 1)
 AUDIO_GID=$(stat -c %g /dev/snd/controlC* 2>/dev/null | head -n 1)
-GROUP_ADD=$(printf '%s\n' $KVM_GID $RENDER_GID $VIDEO_GID $AUDIO_GID | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
+GROUP_ADD=$(printf '%s\n' $RENDER_GID $VIDEO_GID $AUDIO_GID | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
+AMD_GPU=$(grep -l 0x1002 /sys/class/drm/renderD*/device/vendor 2>/dev/null | head -n 1)
+AMD_PRIME=${AMD_GPU:+pci-$(basename "$(readlink -f "${AMD_GPU%/vendor}")" | tr :. __)}
 USER=bevy
 
 ## Functions
@@ -45,9 +60,9 @@ services:
         environment:
             DISPLAY: $DISPLAY
             XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
-        devices:
+${AMD_PRIME:+            DRI_PRIME: $AMD_PRIME
+}        devices:
             - /dev/dri:/dev/dri
-            - /dev/kvm:/dev/kvm
             - /dev/snd:/dev/snd
 ${GROUP_ADD:+        group_add:
 $GROUP_ADD
@@ -81,13 +96,7 @@ bevy() {
 start() {
 
     compose
-
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-
-        composehack
-
-    fi
-
+    composehack
     bevy
 
 }
