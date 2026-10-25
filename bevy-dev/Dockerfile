@@ -13,35 +13,24 @@ RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
     git
-    libpulse0
-    openbox
+    pipewire-alsa
     pipewire-bin
     sudo
-    unzip
-    wget
-    xauth
-    xinit
-    xorg
-    xterm
 )
 libraries=(
-    build-essential
-    libegl-dev
-    libgl-dev
-    libglu1-mesa-dev
-    libglx-dev
-    libmbedtls-dev
-    libopenal-dev
-    libpng-dev
-    libsdl3-dev
-    libsqlite3-dev
-    libturbojpeg0-dev
-    libuv1-dev
-    libvorbis-dev
-    libvulkan-dev
+    g++
+    libasound2-dev
+    libudev-dev
+    libvulkan1
+    libwayland-dev
+    libx11-6
+    libxcursor1
+    libxi6
+    libxkbcommon-dev
     libxkbcommon-x11-0
-    mesa-common-dev
+    libxrandr2
     mesa-vulkan-drivers
+    pkgconf
     rustup
 )
 apt-get update
