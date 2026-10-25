@@ -12,12 +12,10 @@ ENV LANG=C \
 RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
+    libpulse0
     openbox
-    pipewire
-    pipewire-audio-client-libraries
-    pipewire-pulse
+    pipewire-bin
     sudo
-    wireplumber
     xauth
     xinit
     xorg
