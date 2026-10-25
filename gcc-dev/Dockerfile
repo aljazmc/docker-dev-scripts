@@ -12,31 +12,11 @@ ENV LANG=C \
 RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
-    libpulse0
-    openbox
-    pipewire-bin
     sudo
-    xauth
-    xinit
-    xorg
-    xterm
 )
 libraries=(
     gcc
-    libegl-dev
-    libgl-dev
-    libglu1-mesa-dev
-    libglx-dev
-    libmbedtls-dev
-    libopenal-dev
-    libpng-dev
-    libsdl3-dev
-    libsqlite3-dev
-    libturbojpeg0-dev
-    libuv1-dev
-    libvorbis-dev
-    libvulkan-dev
-    mesa-common-dev
+    libc6-dev
 )
 apt-get update
 apt-get install --no-install-recommends ${runtimeDeps[@]} ${libraries[@]} -y

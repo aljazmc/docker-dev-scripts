@@ -12,31 +12,10 @@ ENV LANG=C \
 RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
-    libpulse0
-    openbox
-    pipewire-bin
     sudo
-    xauth
-    xinit
-    xorg
-    xterm
 )
 libraries=(
     build-essential
-    libegl-dev
-    libgl-dev
-    libglu1-mesa-dev
-    libglx-dev
-    libmbedtls-dev
-    libopenal-dev
-    libpng-dev
-    libsdl3-dev
-    libsqlite3-dev
-    libturbojpeg0-dev
-    libuv1-dev
-    libvorbis-dev
-    libvulkan-dev
-    mesa-common-dev
     rustup
 )
 apt-get update
