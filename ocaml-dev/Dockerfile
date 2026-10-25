@@ -14,14 +14,12 @@ runtimeDeps=(
     ca-certificates
     darcs
     git
+    libpulse0
     mercurial
     openbox
-    pipewire
-    pipewire-audio-client-libraries
-    pipewire-pulse
+    pipewire-bin
     rsync
     sudo
-    wireplumber
     xauth
     xinit
     xorg

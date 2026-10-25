@@ -23,16 +23,14 @@ runtimeDeps=(
     gpg
     gpg-agent
     libatomic1
+    libpulse0
     openbox
-    pipewire
-    pipewire-audio-client-libraries
-    pipewire-pulse
+    pipewire-bin
     sudo
     tar
     udev
     unzip
     wget
-    wireplumber
     xauth
     xinit
     xorg

@@ -17,15 +17,13 @@ ENV ANDROID_HOME="/home/$USER/sdk" \
 RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
+    libpulse0
     openbox
-    pipewire
-    pipewire-audio-client-libraries
-    pipewire-pulse
+    pipewire-bin
     sudo
     udev
     unzip
     wget
-    wireplumber
     xauth
     xinit
     xorg
