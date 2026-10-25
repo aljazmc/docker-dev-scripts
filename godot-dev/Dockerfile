@@ -12,34 +12,28 @@ ENV LANG=C \
 RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
-    openbox
-    pipewire
-    pipewire-audio-client-libraries
-    pipewire-pulse
+    libpulse0
+    pipewire-bin
     sudo
     unzip
     wget
-    wireplumber
-    xauth
-    xinit
-    xorg
-    xterm
 )
 libraries=(
-    libegl-dev
-    libgl-dev
-    libglu1-mesa-dev
-    libglx-dev
-    libmbedtls-dev
-    libopenal-dev
-    libpng-dev
-    libsdl3-dev
-    libsqlite3-dev
-    libturbojpeg0-dev
-    libuv1-dev
-    libvorbis-dev
-    libvulkan-dev
-    mesa-common-dev
+    libdbus-1-3
+    libfontconfig1
+    libgl1
+    libgl1-mesa-dri
+    libglx-mesa0
+    libvulkan1
+    libx11-6
+    libxcursor1
+    libxext6
+    libxi6
+    libxinerama1
+    libxkbcommon0
+    libxrandr2
+    libxrender1
+    mesa-vulkan-drivers
 )
 apt-get update
 apt-get install --no-install-recommends ${runtimeDeps[@]} ${libraries[@]} -y
