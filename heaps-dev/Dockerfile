@@ -2,38 +2,42 @@ FROM debian:latest
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    PATH="/usr/src/hashlink:$PATH" \
+ARG DEBIAN_FRONTEND=noninteractive \
     USER=heaps
 
-RUN <<'EOT'
+ENV LANG=C \
+    LC_ALL=C \
+    PATH="$PATH:/home/$USER"
+
+RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
     git
     haxe
-    libapache2-mod-neko
-    libgc1
-    libmariadb3
+    libpulse0
+    neko
+    pipewire-bin
+    rsync
+    sudo
+)
+libraries=(
+    libgl1
+    libgl1-mesa-dri
     libmbedcrypto16
     libmbedtls21
     libmbedx509-7
-    libneko2
-    libpcre2-8-0
+    libopenal1
+    libpng16-16t64
+    libsdl3-0
     libsqlite3-0
-    neko
-    neko-dev
-    pipewire
-    pipewire-audio-client-libraries
-    pipewire-pulse
-    rsync
-    sudo
-    wireplumber
+    libturbojpeg0
+    libuv1t64
+    libvorbisfile3
     zlib1g
 )
 buildDeps=(
-    build-essential
-    clang
-    libglu1-mesa-dev
+    g++
+    libgl-dev
     libmbedtls-dev
     libopenal-dev
     libpng-dev
@@ -43,26 +47,26 @@ buildDeps=(
     libuv1-dev
     libvorbis-dev
     make
-    mingw-w64
 )
 apt-get update
-apt-get install --no-install-recommends ${runtimeDeps[@]} ${buildDeps[@]} -y
-mkdir -p /usr/src/hashlink /usr/lib/haxe/lib
-cd /usr/src/hashlink
-git clone https://github.com/HaxeFoundation/hashlink .
-git checkout latest
-make
-make install
-EOT
+apt-get install --no-install-recommends ${runtimeDeps[@]} ${libraries[@]} ${buildDeps[@]} -y
 
-RUN <<EOT
+git clone --depth 1 --branch latest https://github.com/HaxeFoundation/hashlink /usr/src/hashlink
+make -C /usr/src/hashlink
+make -C /usr/src/hashlink install
+ldconfig
+rm -rf /usr/src/hashlink
+
+apt-get purge --auto-remove ${buildDeps[@]} -y
+apt-get dist-clean
+
 groupadd --gid 1000 $USER
 useradd --uid 1000 --gid $USER --shell /bin/bash --create-home $USER
 echo "$USER:$USER" | chpasswd
 echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-$USER
-EOT
+EOF
 
 USER $USER
 WORKDIR /home/$USER
 
-CMD ["bash"]
+CMD [ "bash" ]
