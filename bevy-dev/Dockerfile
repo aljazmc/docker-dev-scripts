@@ -13,14 +13,12 @@ RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
     git
+    libpulse0
     openbox
-    pipewire
-    pipewire-audio-client-libraries
-    pipewire-pulse
+    pipewire-bin
     sudo
     unzip
     wget
-    wireplumber
     xauth
     xinit
     xorg
