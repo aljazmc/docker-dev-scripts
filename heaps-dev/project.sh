@@ -1,7 +1,16 @@
 #!/bin/bash
 
+## Check if OS is GNU/Linux
+
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-    echo "This script works only on GNU/Linux systems"
+    echo "Script runs only on GNU/Linux OS. Exiting..."
+    exit
+fi
+
+## Check if Docker compose plugin is installed
+
+if ! docker compose version > /dev/null 2>&1; then
+    echo "Compose plugin is not installed. Exiting..."
     exit
 fi
 
