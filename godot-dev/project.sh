@@ -83,6 +83,59 @@ composehack() {
 
 godot() {
 
+    if [[ ! -f project.godot ]]; then
+        cat << EOF > project.godot
+config_version=5
+
+[application]
+
+config/name="Hello"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7", "C#")
+
+[dotnet]
+
+project/assembly_name="Hello"
+EOF
+    fi
+
+    if [[ ! -f Hello.csproj ]]; then
+        cat << EOF > Hello.csproj
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+</Project>
+EOF
+    fi
+
+    if [[ ! -f main.tscn ]]; then
+        cat << EOF > main.tscn
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Main.cs" id="1"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1")
+EOF
+    fi
+
+    if [[ ! -f Main.cs ]]; then
+        cat << EOF > Main.cs
+using Godot;
+
+public partial class Main : Node
+{
+    public override void _Ready()
+    {
+        AddChild(new Label { Text = "Hello Godot!" });
+    }
+}
+EOF
+    fi
+
+    docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64 --headless --build-solutions --quit"
     docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64"
     docker compose run --rm godot sh -c "printenv"
 
