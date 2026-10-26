@@ -20,6 +20,7 @@ Each environment lives in its own subdirectory and consists of:
 
 * `Dockerfile` - builds the development image (except `wordpress-dev`, which uses prebuilt images)
 * `project.sh` - generates `docker-compose.yml` and project files, then starts or cleans up the environment
+* `README.md` - (`bevy-dev`, `godot-dev`, `heaps-dev`) usage notes, including how to bundle self-contained Linux, Windows and macOS packages and run them
 
 On GNU/Linux, `project.sh` adds your user and group id to `docker-compose.yml`, so generated files are owned by you and not by root.
 
@@ -45,7 +46,7 @@ cd node-dev
 ```
 
 > [!CAUTION]
-> Function "clean" is used in the development of "project.sh" script to remove **ALL** generated files and folders (everything except `Dockerfile` and `project.sh`). It also runs `docker system prune -af --volumes`, which removes **ALL** unused Docker images, containers, networks and volumes on your system, not only the ones belonging to this project. When developing your own project don't forget to change it!
+> Function "clean" is used in the development of "project.sh" script to remove **ALL** generated files and folders (everything except `Dockerfile`, `project.sh` and `README.md`). It also runs `docker system prune -af --volumes`, which removes **ALL** unused Docker images, containers, networks and volumes on your system, not only the ones belonging to this project. When developing your own project don't forget to change it!
 
 ## > Environments:
 
