@@ -36,6 +36,7 @@ clean() {
         | sed "
             /Dockerfile/d;
             /project.sh/d;
+            /README.md/d;
         " \
         | xargs -I {} rm -rf {}
 
@@ -127,6 +128,108 @@ EOF
     docker compose run --rm heaps haxe compile.hxml
     docker compose run --rm heaps hl hello.hl
     docker compose run --rm heaps sh -c "printenv"
+
+}
+
+bundleforlinux() {
+
+    docker compose run --rm heaps haxe compile.hxml
+
+    docker compose run --rm -T heaps bash -euo pipefail << 'EOF'
+rm -rf dist/linux dist/Hello-linux-x86_64.tar.gz
+mkdir -p dist/linux/Hello
+cp /usr/local/bin/hl /usr/local/lib/libhl.so /usr/local/lib/*.hdll dist/linux/Hello/
+cp hello.hl dist/linux/Hello/hlboot.dat
+[[ ! -d res ]] || cp -r res dist/linux/Hello/
+
+## Bundle shared libraries, skipping (with their dependencies) the ones every desktop provides
+queue=(dist/linux/Hello/hl dist/linux/Hello/*.hdll)
+while (( ${#queue[@]} )); do
+    for lib in $(objdump -p "${queue[0]}" | awk '/NEEDED/ {print $2}'); do
+        [[ ! -e dist/linux/Hello/$lib ]] || continue
+        [[ ! $lib =~ ^(ld-linux|libc\.|libm\.|libdl\.|libpthread\.|librt\.|libstdc\+\+|libgcc_s|libGL|libEGL|libOpenGL|libX|libxcb|libxkbcommon|libdrm|libgbm|libvulkan|libasound|libpulse|libpipewire|libdbus|libudev|libsystemd) ]] || continue
+        cp -L "$(ldconfig -p | awk -v lib="$lib" '$1 == lib && /x86-64/ {print $NF; exit}')" dist/linux/Hello/
+        queue+=("dist/linux/Hello/$lib")
+    done
+    queue=("${queue[@]:1}")
+done
+
+cat << 'LAUNCHER' > dist/linux/Hello/Hello
+#!/bin/sh
+cd "$(dirname "$(readlink -f "$0")")" || exit 1
+LD_LIBRARY_PATH=".${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" exec ./hl hlboot.dat "$@"
+LAUNCHER
+chmod +x dist/linux/Hello/Hello
+
+tar -czf dist/Hello-linux-x86_64.tar.gz -C dist/linux Hello
+EOF
+
+}
+
+bundleforwindows() {
+
+    docker compose run --rm heaps haxe compile.hxml
+
+    docker compose run --rm -T heaps bash -euo pipefail << 'EOF'
+rm -rf dist/windows dist/Hello-windows-x86_64.zip
+mkdir -p dist/windows/Hello
+cp -r /opt/hashlink/windows/. dist/windows/Hello/
+mv dist/windows/Hello/hl.exe dist/windows/Hello/Hello.exe
+cp hello.hl dist/windows/Hello/hlboot.dat
+[[ ! -d res ]] || cp -r res dist/windows/Hello/
+
+cd dist/windows
+zip -qr ../Hello-windows-x86_64.zip Hello
+EOF
+
+}
+
+bundleformac() {
+
+    docker compose run --rm heaps haxe compile.hxml
+
+    docker compose run --rm -T heaps bash -euo pipefail << 'EOF'
+rm -rf dist/macos dist/Hello-macos.zip
+mkdir -p dist/macos/Hello.app/Contents/MacOS
+cp -L /opt/hashlink/macos/{hl,libhl.2.dylib,libopenal.1.dylib,*.hdll} dist/macos/Hello.app/Contents/MacOS/
+cp hello.hl dist/macos/Hello.app/Contents/MacOS/hlboot.dat
+[[ ! -d res ]] || cp -r res dist/macos/Hello.app/Contents/MacOS/
+
+cat << 'LAUNCHER' > dist/macos/Hello.app/Contents/MacOS/Hello
+#!/bin/sh
+cd "$(dirname "$0")" || exit 1
+exec ./hl hlboot.dat "$@"
+LAUNCHER
+chmod +x dist/macos/Hello.app/Contents/MacOS/Hello
+
+cat << 'PLIST' > dist/macos/Hello.app/Contents/Info.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>Hello</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.example.hello</string>
+    <key>CFBundleName</key>
+    <string>Hello</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>11.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+
+cd dist/macos
+zip -qry ../Hello-macos.zip Hello.app
+EOF
 
 }
 
