@@ -17,6 +17,7 @@ runtimeDeps=(
     sudo
     unzip
     wget
+    zip
 )
 libraries=(
     libdbus-1-3
@@ -57,6 +58,14 @@ sudo apt-get install --no-install-recommends dotnet-sdk-10.0 -y
 wget "https://downloads.godotengine.org/?version=4.7.2&flavor=stable&slug=mono_linux_x86_64.zip&platform=linux.64"
 unzip "index.html?version=4.7.2&flavor=stable&slug=mono_linux_x86_64.zip&platform=linux.64"
 sudo mv Godot_v4.7.2-stable_mono_linux_x86_64 /opt/godot
+wget https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_mono_export_templates.tpz
+unzip Godot_v4.7.2-stable_mono_export_templates.tpz \
+    "templates/version.txt" \
+    "templates/linux_*.x86_64" \
+    "templates/windows_*_x86_64*.exe" \
+    "templates/macos.zip"
+rm Godot_v4.7.2-stable_mono_export_templates.tpz
+sudo mv templates /opt/godot/templates
 EOF
 
 CMD [ "bash" ]
