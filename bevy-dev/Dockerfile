@@ -16,9 +16,11 @@ runtimeDeps=(
     pipewire-alsa
     pipewire-bin
     sudo
+    zip
 )
 libraries=(
     g++
+    gcc-mingw-w64-x86-64
     libasound2-dev
     libudev-dev
     libvulkan1
