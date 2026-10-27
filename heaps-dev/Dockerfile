@@ -17,9 +17,11 @@ runtimeDeps=(
     haxe
     libpulse0
     neko
+    nsis
     pipewire-bin
     rsync
     sudo
+    xorriso
     zip
 )
 libraries=(
