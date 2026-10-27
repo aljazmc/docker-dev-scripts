@@ -16,7 +16,7 @@ fi
 
 ## Variables
 
-#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
+PROJECT_NAME=${PWD##*/} ## PROJECT_NAME = parent directory, also the name of the application
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
@@ -84,12 +84,12 @@ composehack() {
 
 bevy() {
 
-    mkdir -p src
+    mkdir -p assets src
 
     if [[ ! -f Cargo.toml ]]; then
         cat << EOF > Cargo.toml
 [package]
-name = "hello"
+name = "$PROJECT_NAME"
 version = "0.1.0"
 edition = "2024"
 
@@ -107,18 +107,53 @@ EOF
 
     if [[ ! -f src/main.rs ]]; then
         cat << EOF > src/main.rs
+mod hello;
+
 use bevy::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "$PROJECT_NAME".into(),
+                resolution: (960, 540).into(),
+                ..default()
+            }),
+            ..default()
+        }))
+        .insert_resource(ClearColor(Color::srgb(0.1, 0.1, 0.15)))
+        .add_plugins(hello::HelloPlugin)
         .run();
+}
+EOF
+    fi
+
+    if [[ ! -f src/hello.rs ]]; then
+        cat << EOF > src/hello.rs
+use bevy::camera::ScalingMode;
+use bevy::prelude::*;
+
+/// Size of the visible area in world units, scaled by the camera to fit the window.
+const VIEW_WIDTH: f32 = 960.;
+const VIEW_HEIGHT: f32 = 540.;
+
+pub struct HelloPlugin;
+
+impl Plugin for HelloPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, setup);
+    }
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d);
-    commands.spawn(Text::new("Hello Bevy!"));
+    commands.spawn((
+        Camera2d,
+        Projection::Orthographic(OrthographicProjection {
+            scaling_mode: ScalingMode::AutoMin { min_width: VIEW_WIDTH, min_height: VIEW_HEIGHT },
+            ..OrthographicProjection::default_2d()
+        }),
+    ));
+    commands.spawn((Text2d::new("Hello Bevy!"), TextFont::from_font_size(48.)));
 }
 EOF
     fi
@@ -131,40 +166,107 @@ EOF
 
 bundleforlinux() {
 
-    docker compose run --rm -T bevy bash -euo pipefail << 'EOF'
+    docker compose run --rm -T -e PROJECT_NAME="$PROJECT_NAME" bevy bash -euo pipefail << 'EOF'
 cargo build --release
 
-rm -rf dist/linux dist/Hello-linux-x86_64.tar.gz
-mkdir -p dist/linux/Hello
-cp target/release/hello dist/linux/Hello/Hello
-strip dist/linux/Hello/Hello
-[[ ! -d assets ]] || cp -r assets dist/linux/Hello/
+rm -rf dist/linux dist/$PROJECT_NAME-linux-x86_64.tar.gz
+mkdir -p dist/linux/$PROJECT_NAME
+cp target/release/$PROJECT_NAME dist/linux/$PROJECT_NAME/$PROJECT_NAME
+strip dist/linux/$PROJECT_NAME/$PROJECT_NAME
+[[ ! -d assets ]] || cp -r assets dist/linux/$PROJECT_NAME/
 
-tar -czf dist/Hello-linux-x86_64.tar.gz -C dist/linux Hello
+tar -czf dist/$PROJECT_NAME-linux-x86_64.tar.gz -C dist/linux $PROJECT_NAME
 EOF
 
 }
 
 bundleforwindows() {
 
-    docker compose run --rm -T bevy bash -euo pipefail << 'EOF'
+    docker compose run --rm -T -e PROJECT_NAME="$PROJECT_NAME" bevy bash -euo pipefail << 'EOF'
 rustup target add x86_64-pc-windows-gnu
 CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="-C target-feature=+crt-static" \
     cargo build --release --target x86_64-pc-windows-gnu
 
-rm -rf dist/windows dist/Hello-windows-x86_64.zip
-mkdir -p dist/windows/Hello
-cp target/x86_64-pc-windows-gnu/release/hello.exe dist/windows/Hello/Hello.exe
-x86_64-w64-mingw32-strip dist/windows/Hello/Hello.exe
-[[ ! -d assets ]] || cp -r assets dist/windows/Hello/
+rm -rf dist/windows dist/$PROJECT_NAME-windows-x86_64.zip
+mkdir -p dist/windows/$PROJECT_NAME
+cp target/x86_64-pc-windows-gnu/release/$PROJECT_NAME.exe dist/windows/$PROJECT_NAME/$PROJECT_NAME.exe
+x86_64-w64-mingw32-strip dist/windows/$PROJECT_NAME/$PROJECT_NAME.exe
+[[ ! -d assets ]] || cp -r assets dist/windows/$PROJECT_NAME/
 
 ## Bundle MinGW runtime DLLs in case anything still links against them
-for dll in $(x86_64-w64-mingw32-objdump -p dist/windows/Hello/Hello.exe | sed -n 's/.*DLL Name: //p'); do
-    find /usr/lib/gcc/x86_64-w64-mingw32 /usr/x86_64-w64-mingw32/lib -name "$dll" -exec cp {} dist/windows/Hello/ \; -quit
+for dll in $(x86_64-w64-mingw32-objdump -p dist/windows/$PROJECT_NAME/$PROJECT_NAME.exe | sed -n 's/.*DLL Name: //p'); do
+    find /usr/lib/gcc/x86_64-w64-mingw32 /usr/x86_64-w64-mingw32/lib -name "$dll" -exec cp {} dist/windows/$PROJECT_NAME/ \; -quit
 done
 
 cd dist/windows
-zip -qr ../Hello-windows-x86_64.zip Hello
+zip -qr ../$PROJECT_NAME-windows-x86_64.zip $PROJECT_NAME
+EOF
+
+}
+
+makebundles() {
+
+    ## Packs the bundles of bundleforlinux and bundleforwindows into self-extracting files,
+    ## which unpack the bundle to a temporary directory, run it and remove the directory again
+    if [[ ! -d dist/linux/$PROJECT_NAME && ! -d dist/windows/$PROJECT_NAME ]]; then
+        echo "No bundles found. Run ./project.sh bundleforlinux and/or ./project.sh bundleforwindows first. Exiting..."
+        exit 1
+    fi
+
+    docker compose run --rm -T -e PROJECT_NAME="$PROJECT_NAME" bevy bash -euo pipefail << 'EOF'
+if [[ -d dist/linux/$PROJECT_NAME ]]; then
+    ## Shell script with the bundle appended as a tar.gz
+    cat << HEADER > dist/$PROJECT_NAME-linux-x86_64.sh
+#!/bin/sh
+set -e
+TMP="\$(mktemp -d)"
+trap 'rm -rf "\$TMP"' EXIT
+trap 'exit 130' INT TERM HUP
+ARCHIVE="\$(awk '/^__ARCHIVE__\$/ { print NR + 1; exit }' "\$0")"
+tail -n +"\$ARCHIVE" "\$0" | tar -xz -C "\$TMP"
+"\$TMP/$PROJECT_NAME" "\$@"
+exit \$?
+__ARCHIVE__
+HEADER
+    tar -czf - -C dist/linux/$PROJECT_NAME . >> dist/$PROJECT_NAME-linux-x86_64.sh
+    chmod +x dist/$PROJECT_NAME-linux-x86_64.sh
+    echo "Created dist/$PROJECT_NAME-linux-x86_64.sh"
+fi
+
+if [[ -d dist/windows/$PROJECT_NAME ]]; then
+    ## Silent NSIS installer doing the same in the user's temporary directory
+    cat << NSIS > dist/$PROJECT_NAME.nsi
+Unicode true
+SetCompressor /SOLID lzma
+RequestExecutionLevel user
+SilentInstall silent
+Name "$PROJECT_NAME"
+OutFile "$PROJECT_NAME-windows-x86_64.exe"
+!include FileFunc.nsh
+
+Section
+    InitPluginsDir
+    SetOutPath "\$PLUGINSDIR\\app"
+    File /r "windows/$PROJECT_NAME/*"
+    \${GetParameters} \$0
+    ExecWait '"\$PLUGINSDIR\\app\\$PROJECT_NAME.exe" \$0' \$1
+    SetOutPath "\$TEMP"
+    StrCpy \$2 0
+    retry:
+        RMDir /r "\$PLUGINSDIR\\app"
+        IfFileExists "\$PLUGINSDIR\\app" 0 done
+        IntOp \$2 \$2 + 1
+        IntCmp \$2 50 done
+        Sleep 100
+        Goto retry
+    done:
+    SetErrorLevel \$1
+SectionEnd
+NSIS
+    makensis -V2 dist/$PROJECT_NAME.nsi
+    rm dist/$PROJECT_NAME.nsi
+    echo "Created dist/$PROJECT_NAME-windows-x86_64.exe"
+fi
 EOF
 
 }

@@ -13,6 +13,7 @@ RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
     git
+    nsis
     pipewire-alsa
     pipewire-bin
     sudo
