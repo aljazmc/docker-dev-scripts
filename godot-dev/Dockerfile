@@ -13,10 +13,12 @@ RUN <<'EOF'
 runtimeDeps=(
     ca-certificates
     libpulse0
+    nsis
     pipewire-bin
     sudo
     unzip
     wget
+    xorriso
     zip
 )
 libraries=(

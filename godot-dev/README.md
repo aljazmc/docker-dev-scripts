@@ -5,27 +5,47 @@ Dockerized development environment for [Godot](https://godotengine.org) 4.7 with
 ## > Usage
 
 ```
-./project.sh start              # build the image, generate the Hello project, build and run it
-./project.sh bundleforlinux     # dist/Hello-linux-x86_64.tar.gz
-./project.sh bundleforwindows   # dist/Hello-windows-x86_64.zip
-./project.sh bundleformac       # dist/Hello-macos.zip
+./project.sh start              # build the image, generate the project, build and run it
+./project.sh bundleforlinux     # dist/<name>-linux-x86_64.tar.gz
+./project.sh bundleforwindows   # dist/<name>-windows-x86_64.zip
+./project.sh bundleformac       # dist/<name>-macos.zip
+./project.sh makebundles        # dist/<name>-linux-x86_64.sh, dist/<name>-windows-x86_64.exe and dist/<name>-macos.dmg from the bundles above
 ./project.sh clean
 ```
 
-Run `./project.sh start` once before bundling. Bundles are exported with the official Godot export templates, which are installed in the image. On the first bundle `exportsetup` creates `export_presets.cfg` and `Hello.sln`. It also enables two settings exports need: ETC2/ASTC texture import in `project.godot` (required for macOS) and `InvariantGlobalization` in `Hello.csproj` (so the Linux build does not depend on the system libicu).
+`<name>` stands for `PROJECT_NAME` in `project.sh`: the name of the directory that contains `project.sh`, e.g. `godot-dev`. It names the Godot project (`config/name`), the C# project and assembly, the exported executables, the bundles and the window title. Use lowercase letters, digits and dashes, as the name is used in file names.
 
-Each bundle contains a self-contained .NET runtime (`data_Hello_*` folder), so .NET does not need to be installed on the target machine.
+Run `./project.sh start` once before bundling. Bundles are exported with the official Godot export templates, which are installed in the image. On the first bundle `exportsetup` creates `export_presets.cfg` and `<name>.sln`. It also enables two settings exports need: ETC2/ASTC texture import in `project.godot` (required for macOS) and `InvariantGlobalization` in `<name>.csproj` (so the Linux build does not depend on the system libicu).
+
+Each bundle contains a self-contained .NET runtime (`data_<name>_*` folder), so .NET does not need to be installed on the target machine.
+
+The generated project:
+
+* `project.godot` - the project settings. The viewport is 960x540 and scaled to fit the window (`canvas_items` stretch mode), so the layout does not depend on the window size.
+* `<name>.csproj` - the C# project
+* `main.tscn` and `Main.cs` - the main scene, which adds the `Hello` node
+* `Hello.cs` - a label with the greeting in the middle of the viewport. Add further parts of the game as nodes or scenes of their own.
+
+## > Self-extracting bundles
+
+`./project.sh makebundles` packs the bundles made by `bundleforlinux`, `bundleforwindows` and `bundleformac` (whichever exist) into single files:
+
+* `dist/<name>-linux-x86_64.sh` is a shell script with the bundle appended as a tar.gz. It unpacks the bundle into a temporary directory, runs it and removes the directory when the game exits: `sh <name>-linux-x86_64.sh` (or `chmod +x` it and start it directly).
+* `dist/<name>-windows-x86_64.exe` is a silent NSIS installer doing the same in the user's temporary directory. It needs no administrator rights.
+* `dist/<name>-macos.dmg` is a disk image with the app from `<name>-macos.zip` and a link to `Applications`, the usual way to install a Mac app: open it and drag the app onto `Applications`. The image is not compressed, so it is larger than the zip.
+
+The requirements are the same as for the bundles below, and the files are not signed either (see there). Godot keeps saved data in `user://`, which is in the user's data directory, so it persists although the game runs from a temporary directory.
 
 ## > Running the bundles
 
 ### Linux
 
 ```
-tar -xzf Hello-linux-x86_64.tar.gz
-./Hello/Hello.x86_64
+tar -xzf <name>-linux-x86_64.tar.gz
+./<name>/<name>.x86_64
 ```
 
-Keep `data_Hello_linuxbsd_x86_64` next to `Hello.x86_64`.
+Keep `data_<name>_linuxbsd_x86_64` next to `<name>.x86_64`.
 
 Requirements:
 
@@ -36,7 +56,7 @@ Requirements:
 
 ### Windows
 
-Extract `Hello-windows-x86_64.zip` (Explorer: *Extract All*) and double-click `Hello\Hello.exe`. Keep `data_Hello_windows_x86_64` next to `Hello.exe`.
+Extract `<name>-windows-x86_64.zip` (Explorer: *Extract All*) and double-click `<name>\<name>.exe`. Keep `data_<name>_windows_x86_64` next to `<name>.exe`.
 
 Requirements:
 
@@ -47,7 +67,7 @@ The executable is not signed, so SmartScreen may ask for confirmation: *More inf
 
 ### macOS
 
-Double-click `Hello-macos.zip` in Finder and start `Hello.app`. It is a universal app (Apple Silicon and Intel).
+Double-click `<name>-macos.zip` in Finder and start `<name>.app`. It is a universal app (Apple Silicon and Intel).
 
 Requirements:
 
@@ -56,5 +76,5 @@ Requirements:
 The app is only ad-hoc signed and not notarized, so macOS blocks the first start. Allow it in *System Settings* → *Privacy & Security* → *Open Anyway*, or remove the quarantine flag:
 
 ```
-xattr -dr com.apple.quarantine Hello.app
+xattr -dr com.apple.quarantine <name>.app
 ```

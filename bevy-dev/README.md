@@ -5,25 +5,44 @@ Dockerized development environment for the [Bevy](https://bevy.org) game engine.
 ## > Usage
 
 ```
-./project.sh start              # build the image, generate the hello crate, build and run it
-./project.sh bundleforlinux     # dist/Hello-linux-x86_64.tar.gz
-./project.sh bundleforwindows   # dist/Hello-windows-x86_64.zip
+./project.sh start              # build the image, generate the crate, build and run it
+./project.sh bundleforlinux     # dist/<name>-linux-x86_64.tar.gz
+./project.sh bundleforwindows   # dist/<name>-windows-x86_64.zip
+./project.sh makebundles        # dist/<name>-linux-x86_64.sh and dist/<name>-windows-x86_64.exe from the bundles above
 ./project.sh clean
 ```
 
-`./project.sh start` generates a `hello` crate (`Cargo.toml` and `src/main.rs`) that depends on bevy from crates.io and shows "Hello Bevy!" in a window. Existing files are not overwritten, so you can develop your own game in their place. Run `./project.sh start` once before bundling.
+`<name>` stands for `PROJECT_NAME` in `project.sh`: the name of the directory that contains `project.sh`, e.g. `bevy-dev`. It names the crate, its binary, the bundles and the window title. Use lowercase letters, digits and dashes, as the name is used in file names, and Cargo requires it for crate names.
 
-Each bundle contains the stripped release binary, renamed to `Hello` (`Hello.exe` on Windows), and the project's `assets/` folder if it exists. The Windows binary is cross-compiled with MinGW (`x86_64-pc-windows-gnu`) and linked statically, so it does not need any MinGW or Visual C++ runtime DLLs.
+`./project.sh start` generates a `hello` crate that depends on bevy from crates.io and shows "Hello Bevy!" in a window. Existing files are not overwritten, so you can develop your own game in their place. Run `./project.sh start` once before bundling.
+
+The generated project:
+
+* `Cargo.toml` - the `<name>` package
+* `src/main.rs` - sets up the app: window title and size, background color, and the game's plugins
+* `src/hello.rs` - `HelloPlugin`, which spawns a camera and the text. The camera always shows a 960x540 area scaled to fit the window, so the layout does not depend on the window size. Add further features as plugins in their own modules.
+* `assets/` - files for Bevy's `AssetServer`. Under `cargo run` Bevy reads it next to `Cargo.toml`, in the bundles next to the executable.
+
+Each bundle contains the stripped release binary, renamed to `<name>` (`<name>.exe` on Windows), and the project's `assets/` folder if it exists. The Windows binary is cross-compiled with MinGW (`x86_64-pc-windows-gnu`) and linked statically, so it does not need any MinGW or Visual C++ runtime DLLs.
 
 There is no `bundleformac`: cross-compiling for macOS requires Apple's macOS SDK, which may only be used on Apple hardware.
+
+## > Self-extracting bundles
+
+`./project.sh makebundles` packs the bundles made by `bundleforlinux` and `bundleforwindows` (whichever exist) into single files that start the game directly:
+
+* `dist/<name>-linux-x86_64.sh` is a shell script with the bundle appended as a tar.gz. It unpacks the bundle into a temporary directory, runs it and removes the directory when the game exits: `sh <name>-linux-x86_64.sh` (or `chmod +x` it and start it directly).
+* `dist/<name>-windows-x86_64.exe` is a silent NSIS installer doing the same in the user's temporary directory. It needs no administrator rights.
+
+The requirements are the same as for the bundles below. As the working directory of the game may be temporary, write files that should persist (e.g. saved games) to the user's data directory (`~/.local/share/...` or `%APPDATA%\...`) instead.
 
 ## > Running the bundles
 
 ### Linux
 
 ```
-tar -xzf Hello-linux-x86_64.tar.gz
-./Hello/Hello
+tar -xzf <name>-linux-x86_64.tar.gz
+./<name>/<name>
 ```
 
 If the bundle has an `assets/` folder, keep it next to the binary.
@@ -37,11 +56,11 @@ Requirements:
 
 ### Windows
 
-Extract `Hello-windows-x86_64.zip` (Explorer: *Extract All*) and double-click `Hello\Hello.exe`. If the bundle has an `assets\` folder, keep it next to the executable.
+Extract `<name>-windows-x86_64.zip` (Explorer: *Extract All*) and double-click `<name>\<name>.exe`. If the bundle has an `assets\` folder, keep it next to the executable.
 
 Requirements:
 
 * Windows 10 or 11, x64
 * GPU with Direct3D 12 or Vulkan driver
 
-The executable is not signed, so SmartScreen may ask for confirmation: *More info* → *Run anyway*.
+The executable (and the self-extracting `.exe`) is not signed, so SmartScreen may ask for confirmation: *More info* → *Run anyway*.

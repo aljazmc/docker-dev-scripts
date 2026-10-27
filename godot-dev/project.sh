@@ -16,7 +16,7 @@ fi
 
 ## Variables
 
-#PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
+PROJECT_NAME=${PWD##*/} ## PROJECT_NAME = parent directory, also the name of the application
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
 RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
@@ -90,18 +90,25 @@ config_version=5
 
 [application]
 
-config/name="Hello"
+config/name="$PROJECT_NAME"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.7", "C#")
 
+[display]
+
+window/size/viewport_width=960
+window/size/viewport_height=540
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
 [dotnet]
 
-project/assembly_name="Hello"
+project/assembly_name="$PROJECT_NAME"
 EOF
     fi
 
-    if [[ ! -f Hello.csproj ]]; then
-        cat << EOF > Hello.csproj
+    if [[ ! -f $PROJECT_NAME.csproj ]]; then
+        cat << EOF > $PROJECT_NAME.csproj
 <Project Sdk="Godot.NET.Sdk/4.7.2">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -130,7 +137,26 @@ public partial class Main : Node
 {
     public override void _Ready()
     {
-        AddChild(new Label { Text = "Hello Godot!" });
+        AddChild(new Hello());
+    }
+}
+EOF
+    fi
+
+    if [[ ! -f Hello.cs ]]; then
+        cat << EOF > Hello.cs
+using Godot;
+
+/// <summary>A greeting in the middle of the 960x540 viewport, which Godot scales to fit the window.</summary>
+public partial class Hello : Label
+{
+    public override void _Ready()
+    {
+        Text = "Hello Godot!";
+        HorizontalAlignment = HorizontalAlignment.Center;
+        VerticalAlignment = VerticalAlignment.Center;
+        LabelSettings = new LabelSettings { FontSize = 48 };
+        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
     }
 }
 EOF
@@ -154,7 +180,7 @@ runnable=true
 export_filter="all_resources"
 include_filter=""
 exclude_filter=""
-export_path="dist/linux/Hello/Hello.x86_64"
+export_path="dist/linux/$PROJECT_NAME/$PROJECT_NAME.x86_64"
 
 [preset.0.options]
 
@@ -169,7 +195,7 @@ runnable=true
 export_filter="all_resources"
 include_filter=""
 exclude_filter=""
-export_path="dist/windows/Hello/Hello.exe"
+export_path="dist/windows/$PROJECT_NAME/$PROJECT_NAME.exe"
 
 [preset.1.options]
 
@@ -184,12 +210,12 @@ runnable=true
 export_filter="all_resources"
 include_filter=""
 exclude_filter=""
-export_path="dist/Hello-macos.zip"
+export_path="dist/$PROJECT_NAME-macos.zip"
 
 [preset.2.options]
 
 binary_format/architecture="universal"
-application/bundle_identifier="com.example.hello"
+application/bundle_identifier="com.example.$PROJECT_NAME"
 codesign/codesign=1
 notarization/notarization=0
 EOF
@@ -204,15 +230,15 @@ EOF
         fi
     fi
 
-    if ! grep -q "InvariantGlobalization" Hello.csproj; then
-        echo "Enabling invariant globalization in Hello.csproj, so exports do not depend on system libicu."
-        sed -i "0,/<PropertyGroup>/s//&\n    <InvariantGlobalization>true<\/InvariantGlobalization>/" Hello.csproj
+    if ! grep -q "InvariantGlobalization" $PROJECT_NAME.csproj; then
+        echo "Enabling invariant globalization in $PROJECT_NAME.csproj, so exports do not depend on system libicu."
+        sed -i "0,/<PropertyGroup>/s//&\n    <InvariantGlobalization>true<\/InvariantGlobalization>/" $PROJECT_NAME.csproj
     fi
 
-    if [[ ! -f Hello.sln ]]; then
+    if [[ ! -f $PROJECT_NAME.sln ]]; then
         docker compose run --rm godot sh -c " \
-            dotnet new sln --format sln --name Hello \
-            && dotnet sln Hello.sln add Hello.csproj"
+            dotnet new sln --format sln --name $PROJECT_NAME \
+            && dotnet sln $PROJECT_NAME.sln add $PROJECT_NAME.csproj"
     fi
 
     mkdir -p dist .local/share/godot/export_templates
@@ -224,34 +250,114 @@ EOF
 bundleforlinux() {
 
     exportsetup
-    rm -rf dist/linux dist/Hello-linux-x86_64.tar.gz
-    mkdir -p dist/linux/Hello
+    rm -rf dist/linux dist/$PROJECT_NAME-linux-x86_64.tar.gz
+    mkdir -p dist/linux/$PROJECT_NAME
 
-    docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release Linux dist/linux/Hello/Hello.x86_64"
+    docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release Linux dist/linux/$PROJECT_NAME/$PROJECT_NAME.x86_64"
 
-    tar -czf dist/Hello-linux-x86_64.tar.gz -C dist/linux Hello
+    tar -czf dist/$PROJECT_NAME-linux-x86_64.tar.gz -C dist/linux $PROJECT_NAME
 
 }
 
 bundleforwindows() {
 
     exportsetup
-    rm -rf dist/windows dist/Hello-windows-x86_64.zip
-    mkdir -p dist/windows/Hello
+    rm -rf dist/windows dist/$PROJECT_NAME-windows-x86_64.zip
+    mkdir -p dist/windows/$PROJECT_NAME
 
     docker compose run --rm godot sh -c " \
-        Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release Windows dist/windows/Hello/Hello.exe \
+        Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release Windows dist/windows/$PROJECT_NAME/$PROJECT_NAME.exe \
         && cd dist/windows \
-        && zip -qr ../Hello-windows-x86_64.zip Hello"
+        && zip -qr ../$PROJECT_NAME-windows-x86_64.zip $PROJECT_NAME"
 
 }
 
 bundleformac() {
 
     exportsetup
-    rm -f dist/Hello-macos.zip
+    rm -f dist/$PROJECT_NAME-macos.zip
 
-    docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release macOS dist/Hello-macos.zip"
+    docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release macOS dist/$PROJECT_NAME-macos.zip"
+
+}
+
+makebundles() {
+
+    ## Packs the bundles of bundleforlinux, bundleforwindows and bundleformac (whichever exist)
+    ## into self-extracting .sh and .exe files, which unpack the bundle to a temporary directory,
+    ## run it and remove the directory again, and into a .dmg disk image
+    if [[ ! -d dist/linux/$PROJECT_NAME && ! -d dist/windows/$PROJECT_NAME && ! -f dist/$PROJECT_NAME-macos.zip ]]; then
+        echo "No bundles found. Run ./project.sh bundleforlinux, bundleforwindows and/or bundleformac first. Exiting..."
+        exit 1
+    fi
+
+    docker compose run --rm -T -e PROJECT_NAME="$PROJECT_NAME" godot bash -euo pipefail << 'EOF'
+if [[ -d dist/linux/$PROJECT_NAME ]]; then
+    ## Shell script with the bundle appended as a tar.gz
+    cat << HEADER > dist/$PROJECT_NAME-linux-x86_64.sh
+#!/bin/sh
+set -e
+TMP="\$(mktemp -d)"
+trap 'rm -rf "\$TMP"' EXIT
+trap 'exit 130' INT TERM HUP
+ARCHIVE="\$(awk '/^__ARCHIVE__\$/ { print NR + 1; exit }' "\$0")"
+tail -n +"\$ARCHIVE" "\$0" | tar -xz -C "\$TMP"
+"\$TMP/$PROJECT_NAME.x86_64" "\$@"
+exit \$?
+__ARCHIVE__
+HEADER
+    tar -czf - -C dist/linux/$PROJECT_NAME . >> dist/$PROJECT_NAME-linux-x86_64.sh
+    chmod +x dist/$PROJECT_NAME-linux-x86_64.sh
+    echo "Created dist/$PROJECT_NAME-linux-x86_64.sh"
+fi
+
+if [[ -d dist/windows/$PROJECT_NAME ]]; then
+    ## Silent NSIS installer doing the same in the user's temporary directory
+    cat << NSIS > dist/$PROJECT_NAME.nsi
+Unicode true
+SetCompressor /SOLID lzma
+RequestExecutionLevel user
+SilentInstall silent
+Name "$PROJECT_NAME"
+OutFile "$PROJECT_NAME-windows-x86_64.exe"
+!include FileFunc.nsh
+
+Section
+    InitPluginsDir
+    SetOutPath "\$PLUGINSDIR\\app"
+    File /r "windows/$PROJECT_NAME/*"
+    \${GetParameters} \$0
+    ExecWait '"\$PLUGINSDIR\\app\\$PROJECT_NAME.exe" \$0' \$1
+    SetOutPath "\$TEMP"
+    StrCpy \$2 0
+    retry:
+        RMDir /r "\$PLUGINSDIR\\app"
+        IfFileExists "\$PLUGINSDIR\\app" 0 done
+        IntOp \$2 \$2 + 1
+        IntCmp \$2 50 done
+        Sleep 100
+        Goto retry
+    done:
+    SetErrorLevel \$1
+SectionEnd
+NSIS
+    makensis -V2 dist/$PROJECT_NAME.nsi
+    rm dist/$PROJECT_NAME.nsi
+    echo "Created dist/$PROJECT_NAME-windows-x86_64.exe"
+fi
+
+if [[ -f dist/$PROJECT_NAME-macos.zip ]]; then
+    ## Disk image with the app from the zip of bundleformac and a link to Applications, to drag the app there
+    STAGE="$(mktemp -d)"
+    chmod 755 "$STAGE"
+    unzip -q dist/$PROJECT_NAME-macos.zip -d "$STAGE"
+    ln -s /Applications "$STAGE/Applications"
+    rm -f dist/$PROJECT_NAME-macos.dmg
+    xorriso -as mkisofs -quiet -V "$PROJECT_NAME" -hfsplus -R -o dist/$PROJECT_NAME-macos.dmg "$STAGE"
+    rm -rf "$STAGE"
+    echo "Created dist/$PROJECT_NAME-macos.dmg"
+fi
+EOF
 
 }
 
