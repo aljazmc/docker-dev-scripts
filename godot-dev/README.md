@@ -26,6 +26,15 @@ The generated project:
 * `main.tscn` and `Main.cs` - the main scene, which adds the `Hello` node
 * `Hello.cs` - a label with the greeting in the middle of the viewport. Add further parts of the game as nodes or scenes of their own.
 
+## > GPU
+
+`docker-compose.yml` is generated on the first run and passes the host's GPU to the container if one exists:
+
+* Intel and AMD (Mesa): `/dev/dri` is mapped into the container. On laptops with an additional AMD GPU, `DRI_PRIME` selects it.
+* NVIDIA (proprietary driver): requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) on the host. The GPU is reserved for the container and selected for OpenGL and Vulkan, also on laptops with PRIME render offload. Without the toolkit, `project.sh` prints a warning and the container falls back to the other GPU or to software rendering.
+
+The file is not regenerated, so delete `docker-compose.yml` after adding or removing a GPU or installing the toolkit.
+
 ## > Self-extracting bundles
 
 `./project.sh makebundles` packs the bundles made by `bundleforlinux`, `bundleforwindows` and `bundleformac` (whichever exist) into single files:
