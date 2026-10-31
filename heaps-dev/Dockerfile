@@ -7,24 +7,35 @@ ARG DEBIAN_FRONTEND=noninteractive \
 
 ENV LANG=C \
     LC_ALL=C \
-    PATH="$PATH:/home/$USER"
+    PATH="$PATH:/opt/blender:/home/$USER"
 
 RUN <<'EOF'
 runtimeDeps=(
     binutils
     ca-certificates
+    ffmpeg
+    fluid-soundfont-gm
+    fluidsynth
     git
     haxe
+    inkscape
     libpulse0
     neko
     nsis
     pipewire-bin
+    python3
+    python3-cssselect
+    python3-lxml
+    python3-numpy
+    python3-pil
+    python3-tinycss2
     rsync
     sudo
     xorriso
     zip
 )
 libraries=(
+    libegl1
     libgl1
     libgl1-mesa-dri
     libmbedcrypto16
@@ -33,10 +44,17 @@ libraries=(
     libopenal1
     libpng16-16t64
     libsdl3-0
+    libsm6
     libsqlite3-0
     libturbojpeg0
     libuv1t64
     libvorbisfile3
+    libx11-6
+    libxfixes3
+    libxi6
+    libxkbcommon0
+    libxrender1
+    libxxf86vm1
     zlib1g
 )
 buildDeps=(
@@ -55,6 +73,7 @@ buildDeps=(
     make
     mingw-w64-x86-64-dev
     unzip
+    xz-utils
 )
 apt-get update
 apt-get install --no-install-recommends ${runtimeDeps[@]} ${libraries[@]} ${buildDeps[@]} -y
@@ -83,6 +102,9 @@ curl -fsSL $hlUrl/$hlRelease-darwin-cmake.tar.gz | tar -xz -C /opt/hashlink
 mv /opt/hashlink/$hlRelease-darwin-cmake /opt/hashlink/macos
 rm -rf /opt/hashlink/macos/include
 rm -rf /usr/src/hashlink
+
+curl -fsSL https://download.blender.org/release/Blender5.2/blender-5.2.3-linux-x64.tar.xz | tar -xJ -C /opt
+mv /opt/blender-5.2.3-linux-x64 /opt/blender
 
 apt-get purge --auto-remove ${buildDeps[@]} -y
 apt-get dist-clean
