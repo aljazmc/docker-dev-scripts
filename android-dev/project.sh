@@ -10,6 +10,12 @@ RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
 VIDEO_GID=$(stat -c %g /dev/dri/card* 2>/dev/null | head -n 1)
 AUDIO_GID=$(stat -c %g /dev/snd/controlC* 2>/dev/null | head -n 1)
 GROUP_ADD=$(printf '%s\n' $KVM_GID $RENDER_GID $VIDEO_GID $AUDIO_GID | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
+AMD_GPU=$(grep -l 0x1002 /sys/class/drm/renderD*/device/vendor 2>/dev/null | head -n 1)
+AMD_PRIME=${AMD_GPU:+pci-$(basename "$(readlink -f "${AMD_GPU%/vendor}")" | tr :. __)}
+DRI_DEVICE=$(ls -d /dev/dri 2>/dev/null)
+NVIDIA_GPU=$(ls /dev/nvidiactl 2>/dev/null)
+NVIDIA_TOOLKIT=$(command -v nvidia-container-runtime-hook)
+NVIDIA=${NVIDIA_GPU:+${NVIDIA_TOOLKIT:+yes}}
 USER=android
 
 CMDLINE_TOOLS_VERSION=14742923
@@ -36,6 +42,9 @@ clean() {
 compose() {
 
     if [[ ! -f docker-compose.yml ]]; then
+        if [[ -n $NVIDIA_GPU && -z $NVIDIA_TOOLKIT ]]; then
+            echo "NVIDIA GPU found, but NVIDIA Container Toolkit is not installed. The container will not use the NVIDIA GPU."
+        fi
         cat << EOF > docker-compose.yml
 services:
     android:
@@ -50,12 +59,24 @@ services:
         environment:
             DISPLAY: $DISPLAY
             XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
-        devices:
-            - /dev/dri:/dev/dri
-            - /dev/kvm:/dev/kvm
+${AMD_PRIME:+            DRI_PRIME: $AMD_PRIME
+}${NVIDIA:+            NVIDIA_DRIVER_CAPABILITIES: all
+            __NV_PRIME_RENDER_OFFLOAD: 1
+            __GLX_VENDOR_LIBRARY_NAME: nvidia
+            __VK_LAYER_NV_optimus: NVIDIA_only
+}        devices:
+${DRI_DEVICE:+            - /dev/dri:/dev/dri
+}            - /dev/kvm:/dev/kvm
             - /dev/snd:/dev/snd
 ${GROUP_ADD:+        group_add:
 $GROUP_ADD
+}${NVIDIA:+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: all
+                          capabilities: [gpu]
 }        network_mode: host
 EOF
     fi
