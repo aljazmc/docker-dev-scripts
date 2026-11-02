@@ -101,3 +101,5 @@ When you distribute a bundle, include the license notices of the bundled third-p
 * Mbed TLS: Apache-2.0
 * libvorbis, libogg, libjpeg-turbo, libsndio, libbsd, libmd: BSD-style
 * SQLite: public domain
+
+Heaps is free and open-source software released under the [MIT License](https://github.com/HeapsIO/heaps/blob/master/LICENSE).

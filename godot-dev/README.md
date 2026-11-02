@@ -87,3 +87,7 @@ The app is only ad-hoc signed and not notarized, so macOS blocks the first start
 ```
 xattr -dr com.apple.quarantine <name>.app
 ```
+
+## > License
+
+Godot is free and open-source software released under the [MIT License](https://github.com/godotengine/godot/blob/master/LICENSE.txt). The licenses of bundled third-party code are listed in [COPYRIGHT.txt](https://github.com/godotengine/godot/blob/master/COPYRIGHT.txt).

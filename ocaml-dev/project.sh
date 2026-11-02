@@ -42,6 +42,7 @@ clean() {
         | sed "
             /Dockerfile/d;
             /project.sh/d;
+            /README.md/d;
         " \
         | xargs -I {} rm -rf {}
 

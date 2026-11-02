@@ -20,7 +20,7 @@ Each environment lives in its own subdirectory and consists of:
 
 * `Dockerfile` - builds the development image (except `wordpress-dev`, which uses prebuilt images)
 * `project.sh` - generates `docker-compose.yml` and project files, then starts or cleans up the environment
-* `README.md` - (`bevy-dev`, `godot-dev`, `heaps-dev`) usage notes, including how to bundle self-contained Linux, Windows and macOS packages and run them
+* `README.md` - usage notes and the license of the main project. In `bevy-dev`, `godot-dev` and `heaps-dev` also how to bundle self-contained Linux, Windows and macOS packages and run them
 
 On GNU/Linux, `project.sh` adds your user and group id to `docker-compose.yml`, so generated files are owned by you and not by root.
 

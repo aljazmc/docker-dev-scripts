@@ -73,3 +73,7 @@ Requirements:
 * GPU with Direct3D 12 or Vulkan driver
 
 The executable (and the self-extracting `.exe`) is not signed, so SmartScreen may ask for confirmation: *More info* → *Run anyway*.
+
+## > License
+
+Bevy is free and open-source software dual-licensed under the [MIT License](https://github.com/bevyengine/bevy/blob/main/LICENSE-MIT) or the [Apache License 2.0](https://github.com/bevyengine/bevy/blob/main/LICENSE-APACHE), at your option.
