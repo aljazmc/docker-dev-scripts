@@ -5,7 +5,7 @@
 PROJECT_NAME=$(basename "$PWD") ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
-PHP_VERSION=8.3
+PHP_VERSION=8.4
 
 ## Functions
 
@@ -63,7 +63,7 @@ services:
             - 8080:80
 
     node:
-        image: node:current-alpine
+        image: aljazmc/corepack-alpine
         working_dir: "$PWD"
         volumes:
             - .:$PWD
