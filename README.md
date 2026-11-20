@@ -1,7 +1,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 # docker-dev-scripts
-Scripts to quickly setup dockerized development environments
+
+One-command Docker development environments for 14 stacks to quickly set-up dockerized development environments.
 
 ## > Features
 
