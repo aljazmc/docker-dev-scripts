@@ -22,7 +22,7 @@ PROJECT_GID=$(id -g)
 RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
 VIDEO_GID=$(stat -c %g /dev/dri/card* 2>/dev/null | head -n 1)
 AUDIO_GID=$(stat -c %g /dev/snd/controlC* 2>/dev/null | head -n 1)
-GROUP_ADD=$(printf '%s\n' $RENDER_GID $VIDEO_GID $AUDIO_GID | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
+GROUP_ADD=$(printf '%s\n' "$RENDER_GID" "$VIDEO_GID" "$AUDIO_GID" | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
 AMD_GPU=$(grep -l 0x1002 /sys/class/drm/renderD*/device/vendor 2>/dev/null | head -n 1)
 AMD_PRIME=${AMD_GPU:+pci-$(basename "$(readlink -f "${AMD_GPU%/vendor}")" | tr :. __)}
 DRI_DEVICE=$(ls -d /dev/dri 2>/dev/null)
@@ -126,7 +126,7 @@ EOF
     fi
 
     if [[ ! -f $PROJECT_NAME.csproj ]]; then
-        cat << EOF > $PROJECT_NAME.csproj
+        cat << EOF > "$PROJECT_NAME.csproj"
 <Project Sdk="Godot.NET.Sdk/4.7.2">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -248,9 +248,9 @@ EOF
         fi
     fi
 
-    if ! grep -q "InvariantGlobalization" $PROJECT_NAME.csproj; then
+    if ! grep -q "InvariantGlobalization" "$PROJECT_NAME.csproj"; then
         echo "Enabling invariant globalization in $PROJECT_NAME.csproj, so exports do not depend on system libicu."
-        sed -i "0,/<PropertyGroup>/s//&\n    <InvariantGlobalization>true<\/InvariantGlobalization>/" $PROJECT_NAME.csproj
+        sed -i "0,/<PropertyGroup>/s//&\n    <InvariantGlobalization>true<\/InvariantGlobalization>/" "$PROJECT_NAME.csproj"
     fi
 
     if [[ ! -f $PROJECT_NAME.sln ]]; then
@@ -268,20 +268,20 @@ EOF
 bundleforlinux() {
 
     exportsetup
-    rm -rf dist/linux dist/$PROJECT_NAME-linux-x86_64.tar.gz
-    mkdir -p dist/linux/$PROJECT_NAME
+    rm -rf dist/linux "dist/$PROJECT_NAME-linux-x86_64.tar.gz"
+    mkdir -p "dist/linux/$PROJECT_NAME"
 
     docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release Linux dist/linux/$PROJECT_NAME/$PROJECT_NAME.x86_64"
 
-    tar -czf dist/$PROJECT_NAME-linux-x86_64.tar.gz -C dist/linux $PROJECT_NAME
+    tar -czf "dist/$PROJECT_NAME-linux-x86_64.tar.gz" -C dist/linux "$PROJECT_NAME"
 
 }
 
 bundleforwindows() {
 
     exportsetup
-    rm -rf dist/windows dist/$PROJECT_NAME-windows-x86_64.zip
-    mkdir -p dist/windows/$PROJECT_NAME
+    rm -rf dist/windows "dist/$PROJECT_NAME-windows-x86_64.zip"
+    mkdir -p "dist/windows/$PROJECT_NAME"
 
     docker compose run --rm godot sh -c " \
         Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release Windows dist/windows/$PROJECT_NAME/$PROJECT_NAME.exe \
@@ -293,7 +293,7 @@ bundleforwindows() {
 bundleformac() {
 
     exportsetup
-    rm -f dist/$PROJECT_NAME-macos.zip
+    rm -f "dist/$PROJECT_NAME-macos.zip"
 
     docker compose run --rm godot sh -c "Godot_v4.7.2-stable_mono_linux.x86_64 --headless --export-release macOS dist/$PROJECT_NAME-macos.zip"
 
