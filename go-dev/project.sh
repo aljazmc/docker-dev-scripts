@@ -12,7 +12,6 @@ USER=go
 clean() {
 
     docker compose down -v --rmi all --remove-orphans
-    docker system prune -af --volumes
 
     find . -mindepth 1 -maxdepth 1 \
         | sed "

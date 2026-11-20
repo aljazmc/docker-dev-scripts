@@ -47,7 +47,7 @@ cd node-dev
 ```
 
 > [!CAUTION]
-> Function "clean" is used in the development of "project.sh" script to remove **ALL** generated files and folders (everything except `Dockerfile`, `project.sh` and `README.md`). It also runs `docker system prune -af --volumes`, which removes **ALL** unused Docker images, containers, networks and volumes on your system, not only the ones belonging to this project. When developing your own project don't forget to change it!
+> Function "clean" is used in the development of "project.sh" script to remove **ALL** generated files and folders (everything except `Dockerfile`, `project.sh` and `README.md`). It also runs `docker compose down -v --rmi all --remove-orphans`, which removes this project's containers, networks, volumes and images (including pulled images its services use). Other Docker projects on your system are left untouched. When developing your own project don't forget to change it!
 
 ## > Environments:
 
