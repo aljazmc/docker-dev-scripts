@@ -10,28 +10,42 @@ Dockerized development environment for [Godot](https://godotengine.org) 4.7 with
 ./project.sh bundleforwindows   # dist/<name>-windows-x86_64.zip
 ./project.sh bundleformac       # dist/<name>-macos.zip
 ./project.sh makebundles        # dist/<name>-linux-x86_64.sh, dist/<name>-windows-x86_64.exe and dist/<name>-macos.dmg from the bundles above
-./project.sh clean
+./project.sh clean      # remove the containers, images, volumes and all generated files
 ```
+
+`project.sh` runs only on GNU/Linux. `./project.sh start` generates `docker-compose.yml` with your user and group id, so generated files are owned by you.
 
 `<name>` stands for `PROJECT_NAME` in `project.sh`: the name of the directory that contains `project.sh`, e.g. `godot-dev`. It names the Godot project (`config/name`), the C# project and assembly, the exported executables, the bundles and the window title. Use lowercase letters, digits and dashes, as the name is used in file names.
 
-Run `./project.sh start` once before bundling. Bundles are exported with the official Godot export templates, which are installed in the image. On the first bundle `exportsetup` creates `export_presets.cfg` and `<name>.sln`. It also enables two settings exports need: ETC2/ASTC texture import in `project.godot` (required for macOS) and `InvariantGlobalization` in `<name>.csproj` (so the Linux build does not depend on the system libicu).
+Existing files are not overwritten, so you can develop your own game in their place. Run `./project.sh start` once before bundling. Bundles are exported with the official Godot export templates, which are installed in the image. On the first bundle `exportsetup` creates `export_presets.cfg` and `<name>.sln`. It also enables two settings exports need: ETC2/ASTC texture import in `project.godot` (required for macOS) and `InvariantGlobalization` in `<name>.csproj` (so the Linux build does not depend on the system libicu).
 
 Each bundle contains a self-contained .NET runtime (`data_<name>_*` folder), so .NET does not need to be installed on the target machine.
 
-The generated project:
+## > Generated project
 
 * `project.godot` - the project settings. The viewport is 960x540 and scaled to fit the window (`canvas_items` stretch mode), so the layout does not depend on the window size.
 * `<name>.csproj` - the C# project
 * `main.tscn` and `Main.cs` - the main scene, which adds the `Hello` node
 * `Hello.cs` - a label with the greeting in the middle of the viewport. Add further parts of the game as nodes or scenes of their own.
 
+## > Image
+
+Based on `debian:13.7` with the .NET 10 SDK, Godot 4.7 (.NET build) and its export templates in `/opt/godot`, Blender in `/opt/blender` for importing `.blend` files, NSIS for the self-extracting Windows bundle and xorriso for the macOS disk image.
+
+A shell in the container, with this directory as the home directory:
+
+```
+docker compose run --rm godot bash
+```
+
 ## > GPU
 
-`docker-compose.yml` is generated on the first run and passes the host's GPU to the container if one exists:
+`docker-compose.yml` is generated on the first run and passes the host's GPU to the `godot` container if one exists:
 
 * Intel and AMD (Mesa): `/dev/dri` is mapped into the container. On laptops with an additional AMD GPU, `DRI_PRIME` selects it.
 * NVIDIA (proprietary driver): requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) on the host. The GPU is reserved for the container and selected for OpenGL and Vulkan, also on laptops with PRIME render offload. Without the toolkit, `project.sh` prints a warning and the container falls back to the other GPU or to software rendering.
+
+Windows use the host's X server (`DISPLAY`, `/tmp/.X11-unix`, `~/.Xauthority`) and sound the host's PipeWire/PulseAudio (`XDG_RUNTIME_DIR`). The container gets the host's render, video and audio groups, so it may open these devices.
 
 The file is not regenerated, so delete `docker-compose.yml` after adding or removing a GPU or installing the toolkit.
 

@@ -10,26 +10,40 @@ Dockerized development environment for [Heaps](https://heaps.io) games running o
 ./project.sh bundleforwindows   # dist/<name>-windows-x86_64.zip
 ./project.sh bundleformac       # dist/<name>-macos.zip
 ./project.sh makebundles        # dist/<name>-linux-x86_64.sh, dist/<name>-windows-x86_64.exe and dist/<name>-macos.dmg from the bundles above
-./project.sh clean
+./project.sh clean      # remove the containers, images, volumes and all generated files
 ```
+
+`project.sh` runs only on GNU/Linux. `./project.sh start` generates `docker-compose.yml` with your user and group id, so generated files are owned by you.
 
 `<name>` stands for `PROJECT_NAME` in `project.sh`: the name of the directory that contains `project.sh`, e.g. `heaps-dev`. It names the compiled game (`<name>.hl`), the bundles and the window title. Use lowercase letters, digits and dashes, as the name is used in file names.
 
-Run `./project.sh start` once before bundling. Each bundle recompiles `<name>.hl` and packs it together with the HashLink runtime as `hlboot.dat`. If a `res/` directory exists, it is copied into the bundle.
+Existing files are not overwritten, so you can develop your own game in their place. Run `./project.sh start` once before bundling. Each bundle recompiles `<name>.hl` and packs it together with the HashLink runtime as `hlboot.dat`. If a `res/` directory exists, it is copied into the bundle.
 
-The generated project:
+## > Generated project
 
 * `compile.hxml` - compiles `src/` to `<name>.hl`
 * `src/Main.hx` - sets up the app: window title and size, and adds the `Hello` scene object. The scene always shows a 960x540 area scaled to fit the window (`LetterBox`), so the layout does not depend on the window size.
 * `src/Hello.hx` - the greeting in the middle of the scene. Add further parts of the game as classes of their own.
 * `res/` - resources for `hxd.Res`, embedded into `<name>.hl` at compile time (`hxd.Res.initEmbed()`)
 
+## > Image
+
+Based on `debian:13.7` with Haxe, HashLink built from source, HashLink's prebuilt Windows (MinGW) and macOS runtimes in `/opt/hashlink`, the MinGW-w64 runtime DLLs, NSIS for the self-extracting Windows bundle and xorriso for the macOS disk image.
+
+A shell in the container, with this directory as the home directory:
+
+```
+docker compose run --rm heaps bash
+```
+
 ## > GPU
 
-`docker-compose.yml` is generated on the first run and passes the host's GPU to the container if one exists:
+`docker-compose.yml` is generated on the first run and passes the host's GPU to the `heaps` container if one exists:
 
 * Intel and AMD (Mesa): `/dev/dri` is mapped into the container. On laptops with an additional AMD GPU, `DRI_PRIME` selects it.
 * NVIDIA (proprietary driver): requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) on the host. The GPU is reserved for the container and selected for OpenGL and Vulkan, also on laptops with PRIME render offload. Without the toolkit, `project.sh` prints a warning and the container falls back to the other GPU or to software rendering.
+
+Windows use the host's X server (`DISPLAY`, `/tmp/.X11-unix`, `~/.Xauthority`) and sound the host's PipeWire/PulseAudio (`XDG_RUNTIME_DIR`). The container gets the host's render, video and audio groups, so it may open these devices.
 
 The file is not regenerated, so delete `docker-compose.yml` after adding or removing a GPU or installing the toolkit.
 
