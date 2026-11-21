@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:13.7
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
