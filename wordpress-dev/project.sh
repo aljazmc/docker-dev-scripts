@@ -17,7 +17,7 @@ autoload() {
 
 clean() {
 
-    docker compose down -v --rmi all --remove-orphans
+    docker compose --profile tools down -v --rmi all --remove-orphans
 
     find . -mindepth 1 -maxdepth 1 \
         | sed "
@@ -41,6 +41,7 @@ services:
             - .:/app
         environment:
             - COMPOSER_CACHE_DIR=/var/cache/composer
+        profiles: [ tools ]
 
     database:
         image: mariadb:latest
@@ -51,6 +52,11 @@ services:
             MARIADB_DATABASE:       $PROJECT_NAME
             MARIADB_USER:           $PROJECT_NAME
             MARIADB_PASSWORD:       $PROJECT_NAME
+        healthcheck:
+            test: [ CMD, healthcheck.sh, --connect, --innodb_initialized ]
+            interval: 5s
+            timeout: 5s
+            retries: 30
 
     myadmin:
         image: phpmyadmin/phpmyadmin
@@ -60,6 +66,8 @@ services:
             MYSQL_ROOT_PASSWORD:    $PROJECT_NAME
         ports:
             - 8080:80
+        depends_on:
+            - database
 
     node:
         image: aljazmc/corepack-alpine
@@ -71,17 +79,20 @@ services:
             NODE_ENV:   development
             PATH:       "$PWD/.yarn/bin:$PWD/node_modules/.bin:\$PATH"
         network_mode: host
+        profiles: [ tools ]
 
     php:
         image: php:$PHP_VERSION-fpm-alpine
         working_dir: "$PWD"
         volumes:
             - .:$PWD
+        profiles: [ tools ]
 
     phpdoc:
         image: phpdoc/phpdoc
         volumes:
             - .:/data
+        profiles: [ tools ]
 
     phpunit:
         image: php:$PHP_VERSION-fpm-alpine
@@ -89,6 +100,7 @@ services:
         volumes:
             - .:$PWD
         entrypoint: vendor/bin/phpunit
+        profiles: [ tools ]
 
     phpunit-watcher:
         image: php:$PHP_VERSION-fpm-alpine
@@ -96,15 +108,23 @@ services:
         volumes:
             - .:$PWD
         entrypoint: vendor/bin/phpunit-watcher
+        profiles: [ tools ]
 
     wordpress:
-        image: wordpress:latest
+        image: wordpress:php$PHP_VERSION-apache
         volumes:
             - .:/var/www/html/
-        links:
-            - database
         ports:
             - 80:80
+        healthcheck:
+            ## the entrypoint writes wp-config.php after copying WordPress
+            test: [ CMD, test, -f, /var/www/html/wp-config.php ]
+            interval: 2s
+            timeout: 5s
+            retries: 60
+        depends_on:
+            database:
+                condition: service_healthy
         environment:
             WORDPRESS_DB_HOST:      database
             WORDPRESS_DB_USER:      $PROJECT_NAME
@@ -112,7 +132,7 @@ services:
             WORDPRESS_DB_NAME:      $PROJECT_NAME
 
     wpcli:
-        image: wordpress:cli
+        image: wordpress:cli-php$PHP_VERSION
         command: /bin/sh -c ' \
             wp core install \
             --path="/var/www/html" \
@@ -122,15 +142,17 @@ services:
             --admin_password="$PROJECT_NAME" \
             --admin_email=foo@bar.com \
             --skip-email; '
-        links:
-            - wordpress
         volumes_from:
             - wordpress
+        depends_on:
+            wordpress:
+                condition: service_healthy
         environment:
             WORDPRESS_DB_HOST:      database
             WORDPRESS_DB_USER:      $PROJECT_NAME
             WORDPRESS_DB_PASSWORD:  $PROJECT_NAME
             WORDPRESS_DB_NAME:      $PROJECT_NAME
+        profiles: [ tools ]
 
 volumes:
     db_data:
@@ -144,6 +166,53 @@ composehack() {
     if ! grep -q "user\:" "docker-compose.yml"; then
         echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
         sed -i "/image\:\ [c,n,p,w]/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
+    fi
+
+}
+
+composerjson() {
+
+    if [[ ! -f composer.json ]]; then
+        cat << EOF > composer.json
+{
+    "name": "$PROJECT_NAME/$PROJECT_NAME",
+    "type": "project",
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "platform": {
+            "php": "$PHP_VERSION.0"
+        }
+    }
+}
+EOF
+    fi
+
+}
+
+configphpunit() {
+
+    if [[ ! -f phpunit.xml ]]; then
+        cat << 'EOF' > phpunit.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
+         colors="true">
+    <testsuites>
+        <testsuite name="default">
+            <directory>tests/php</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>
+EOF
     fi
 
 }
@@ -232,6 +301,23 @@ EOF
 
 }
 
+yarninit() {
+
+    ## yarn init also creates these files, remove the ones that did not exist before
+    local extras=(.editorconfig .gitattributes .git README.md) created=() file
+
+    for file in "${extras[@]}"; do
+        [[ -e $file ]] || created+=("$file")
+    done
+
+    docker compose run --rm node yarn init
+
+    for file in "${created[@]}"; do
+        rm -rf "./$file"
+    done
+
+}
+
 start() {
 
     compose
@@ -251,12 +337,12 @@ start() {
         mkdir -p {src/{assets/{ts,scss,fonts,img},parts,patterns,styles,templates},tests/{ts,php}}
 
         ## Setting up node related stuff
-        docker compose run --rm node yarn init
+        yarninit
 
         ## Setting up php related stuff
-        docker compose run --rm composer init
+        composerjson
+        configphpunit
 
-        docker compose run --rm composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
         docker compose run --rm composer require --dev \
             dealerdirect/phpcodesniffer-composer-installer \
             "squizlabs/php_codesniffer:^3.13" \
@@ -265,7 +351,6 @@ start() {
             phpcompatibility/phpcompatibility-wp \
             phpunit/phpunit \
             spatie/phpunit-watcher
-        docker compose run --rm phpunit --generate-configuration
         cp vendor/wp-coding-standards/wpcs/phpcs.xml.dist.sample phpcs.xml
 
     else
@@ -275,9 +360,10 @@ start() {
 
     fi
 
+    ## waits until the database is ready and WordPress is copied
     docker compose up -d && \
-    sleep 30 && \
-    docker compose run --rm wpcli
+    docker compose run --rm wpcli && \
+    echo "Site: http://localhost  phpMyAdmin: http://localhost:8080"
     ## `ls /usr/bin | grep terminal` -- sh -c "docker compose run --rm phpunit-watcher watch"
 
 }
