@@ -1,34 +1,56 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![lint](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/lint.yml/badge.svg)](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/lint.yml)
-
 # docker-dev-scripts
 
-One-command Docker development environments: 19 environments for languages, mobile apps, games and the web, and 3 monitoring labs. Each lives in its own directory and is set up with `./project.sh start` and removed with `./project.sh clean`, so nothing but Docker needs to be installed on the host.
+[![lint](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/lint.yml/badge.svg)](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/lint.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ed?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Debian 13.7](https://img.shields.io/badge/Debian-13.7-a81d33?logo=debian&logoColor=white)](https://www.debian.org/)
+[![Bash](https://img.shields.io/badge/Bash-project.sh-4eaa25?logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![Environments](https://img.shields.io/badge/environments-19%20%2B%203%20labs-0a7bbb)](#environments)
+[![ShellCheck](https://img.shields.io/badge/ShellCheck-checked-4eaa25?logo=gnubash&logoColor=white)](https://www.shellcheck.net/)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/)
 
-## > Features
+One-command Docker development environments: 19 environments for languages,
+mobile apps, games and the web, and 3 monitoring labs. Each lives in its own
+directory and is set up with `./project.sh start` and removed with
+`./project.sh clean`, so nothing but Docker needs to be installed on the
+host.
 
-* **fully automated setup:** `./project.sh start` builds or pulls the images, generates `docker-compose.yml` and a working example project, installs the dependencies and runs it
-* **nothing overwritten:** existing project files are kept, so you can develop your own project in place of the example and run `./project.sh start` again
-* **files owned by you:** on GNU/Linux the containers run with your user and group id, and with your other groups and those of the GPU, KVM and sound devices
-* **simple cleanup:** `./project.sh clean` removes everything the environment created
-* **GPU, display and sound:** the graphical environments use the host's GPU (Intel, AMD, NVIDIA), X server and PipeWire/PulseAudio
+## Features
 
-## > Prerequisites
+- **Fully automated setup.** `./project.sh start` builds or pulls the
+  images, generates `docker-compose.yml` and a working example project,
+  installs the dependencies and runs it.
+- **Nothing overwritten.** Existing project files are kept, so you can
+  develop your own project in place of the example and run
+  `./project.sh start` again.
+- **Files owned by you.** On GNU/Linux the containers run with your user and
+  group id, and with your other groups and those of the GPU, KVM and sound
+  devices.
+- **Simple cleanup.** `./project.sh clean` removes everything the
+  environment created.
+- **GPU, display and sound.** The graphical environments use the host's GPU
+  (Intel, AMD, NVIDIA), X server and PipeWire/PulseAudio.
+- **Monitoring labs.** Prometheus, VictoriaMetrics and Zabbix watch a
+  WordPress site, with exporters and Grafana.
 
-* GNU/Linux with bash, which the environments are developed and tested on. `android-dev`, `bevy-dev`, `godot-dev`, `heaps-dev`, `ocaml-dev` and `reactnative-dev` require it; the others only use bash and Docker.
-* [Docker](https://docs.docker.com/engine/install/) with the compose plugin, installed and running
-* for `android-dev` and `reactnative-dev`: `/dev/kvm` (hardware virtualization) and `mate-terminal`
+## Quick start
 
-## > Quick start
-
-```
-git clone https://github.com/aljazmc/docker-dev-scripts
+```sh
+git clone https://github.com/aljazmc/docker-dev-scripts.git
 cd docker-dev-scripts/node-dev
 ./project.sh start
 ./project.sh clean
 ```
 
-## > Environments
+## Requirements
+
+| Requirement | Notes |
+| --- | --- |
+| GNU/Linux with bash | the environments are developed and tested on it. `android-dev`, `bevy-dev`, `godot-dev`, `heaps-dev`, `ocaml-dev` and `reactnative-dev` require it; the others only use bash and Docker |
+| [Docker](https://docs.docker.com/engine/install/) | with the compose plugin, installed and running |
+| `/dev/kvm` and `mate-terminal` | for `android-dev` and `reactnative-dev` (hardware virtualization) |
+
+## Environments
 
 ### Languages
 
@@ -79,7 +101,7 @@ cd docker-dev-scripts/node-dev
 
 The web environments and labs publish their services on `localhost` (port 80 for the site, 8080 for the database tool, 3000 for Grafana), so run one of them at a time. Each environment's `README.md` lists its URLs, credentials and further commands.
 
-## > Structure
+## Structure
 
 Each environment directory contains:
 
@@ -92,15 +114,22 @@ Everything else in an environment directory is generated and ignored by git.
 > [!CAUTION]
 > `./project.sh clean` is meant for developing `project.sh` itself: it removes **all** files in the environment directory except `Dockerfile`, `project.sh` and `README.md`, and runs `docker compose down -v --rmi all --remove-orphans`, which removes the environment's containers, networks, volumes (including databases) and images. Other Docker projects are left untouched. When you develop your own project in an environment, change `clean` first!
 
-## > Tests
+## Tests
 
-```
+```sh
 bash tests/test_compose.sh
 shellcheck */project.sh tests/*.sh
 ```
 
-`tests/test_compose.sh` runs `./project.sh compose` and `composehack` of every environment in a temporary directory, with `docker` replaced by a stand-in, and checks that `docker-compose.yml` is written, gets your user and group id and your other groups once, and, if Docker is installed, is accepted by `docker compose config`. The [lint](.github/workflows/lint.yml) workflow runs shellcheck on every push and pull request.
+`tests/test_compose.sh` runs `./project.sh compose` and `composehack` of
+every environment in a temporary directory, with `docker` replaced by a
+stand-in, and checks that `docker-compose.yml` is written, gets your user
+and group id and your other groups once, and, if Docker is installed, is
+accepted by `docker compose config`. The [lint](.github/workflows/lint.yml)
+workflow runs ShellCheck on every push and pull request.
 
-## > License
+## License
 
-[MIT](LICENSE). The environments download and run third-party software under its own licenses, which each environment's `README.md` lists.
+The scripts are licensed under the [MIT License](LICENSE). The environments
+download and run third-party software under its own licenses, which each
+environment's `README.md` lists.
