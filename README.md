@@ -9,7 +9,7 @@ One-command Docker development environments: 19 environments for languages, mobi
 
 * **fully automated setup:** `./project.sh start` builds or pulls the images, generates `docker-compose.yml` and a working example project, installs the dependencies and runs it
 * **nothing overwritten:** existing project files are kept, so you can develop your own project in place of the example and run `./project.sh start` again
-* **files owned by you:** on GNU/Linux the containers run with your user and group id
+* **files owned by you:** on GNU/Linux the containers run with your user and group id, and with your other groups and those of the GPU, KVM and sound devices
 * **simple cleanup:** `./project.sh clean` removes everything the environment created
 * **GPU, display and sound:** the graphical environments use the host's GPU (Intel, AMD, NVIDIA), X server and PipeWire/PulseAudio
 
@@ -99,7 +99,7 @@ bash tests/test_compose.sh
 shellcheck */project.sh tests/*.sh
 ```
 
-`tests/test_compose.sh` runs `./project.sh compose` and `composehack` of every environment in a temporary directory, with `docker` replaced by a stand-in, and checks that `docker-compose.yml` is written and gets your user and group id once. The [lint](.github/workflows/lint.yml) workflow runs shellcheck on every push and pull request.
+`tests/test_compose.sh` runs `./project.sh compose` and `composehack` of every environment in a temporary directory, with `docker` replaced by a stand-in, and checks that `docker-compose.yml` is written, gets your user and group id and your other groups once, and, if Docker is installed, is accepted by `docker compose config`. The [lint](.github/workflows/lint.yml) workflow runs shellcheck on every push and pull request.
 
 ## > License
 

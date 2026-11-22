@@ -5,6 +5,8 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
+PROJECT_GROUPS=$({ id -G; stat -c %g /dev/dri/* /dev/kvm /dev/snd/*; } 2>/dev/null | tr ' ' '\n' | sort -un \
+    | sed "/^0\?$/d; /^$PROJECT_GID$/d" | sed 's/.*/\\n\\1    - "&"/' | tr -d '\n') ## your groups and those of the GPU, KVM and sound devices, as group_add lines for composehack
 USER=java
 
 ## Functions
@@ -40,9 +42,9 @@ EOF
 
 composehack() {
 
-    if ! grep -q "user" "docker-compose.yml"; then
+    if ! grep -q "user\:" "docker-compose.yml"; then
         echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
-        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
+        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID${PROJECT_GROUPS:+\n\1group_add\:$PROJECT_GROUPS}\n\1@}" docker-compose.yml
     fi
 
 }

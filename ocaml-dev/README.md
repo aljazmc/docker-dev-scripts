@@ -35,7 +35,7 @@ docker compose run --rm ocaml bash
 * Intel and AMD (Mesa): `/dev/dri` is mapped into the container. On laptops with an additional AMD GPU, `DRI_PRIME` selects it.
 * NVIDIA (proprietary driver): requires the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) on the host. The GPU is reserved for the container and selected for OpenGL and Vulkan, also on laptops with PRIME render offload. Without the toolkit, `project.sh` prints a warning and the container falls back to the other GPU or to software rendering.
 
-Windows use the host's X server (`DISPLAY`, `/tmp/.X11-unix`, `~/.Xauthority`) and sound the host's PipeWire/PulseAudio (`XDG_RUNTIME_DIR`). The container gets the host's render, video and audio groups, so it may open these devices.
+Windows use the host's X server (`DISPLAY`, `/tmp/.X11-unix` and the X authority file, `$XAUTHORITY` or else `~/.Xauthority`, mounted at the same path) and sound the host's PipeWire/PulseAudio (`/run/user/<uid>`). `docker compose` reads `DISPLAY` and `XAUTHORITY` each time it starts the container, so the file keeps working after you log in again. The X authority file, `/etc/machine-id`, `/dev/dri` and `/dev/snd` are mounted only if they exist on the host.
 
 The file is not regenerated, so delete `docker-compose.yml` after adding or removing a GPU or installing the toolkit.
 

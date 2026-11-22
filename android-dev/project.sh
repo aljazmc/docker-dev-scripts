@@ -5,14 +5,16 @@
 #PROJECT_NAME=`echo ${PWD##*/}` ## PROJECT_NAME = parent directory
 PROJECT_UID=$(id -u)
 PROJECT_GID=$(id -g)
-KVM_GID=$(stat -c %g /dev/kvm 2>/dev/null)
-RENDER_GID=$(stat -c %g /dev/dri/renderD* 2>/dev/null | head -n 1)
-VIDEO_GID=$(stat -c %g /dev/dri/card* 2>/dev/null | head -n 1)
-AUDIO_GID=$(stat -c %g /dev/snd/controlC* 2>/dev/null | head -n 1)
-GROUP_ADD=$(printf '%s\n' "$KVM_GID" "$RENDER_GID" "$VIDEO_GID" "$AUDIO_GID" | sort -un | sed '/^0\?$/d; s/.*/            - "&"/')
+PROJECT_GROUPS=$({ id -G; stat -c %g /dev/dri/* /dev/kvm /dev/snd/*; } 2>/dev/null | tr ' ' '\n' | sort -un \
+    | sed "/^0\?$/d; /^$PROJECT_GID$/d" | sed 's/.*/\\n\\1    - "&"/' | tr -d '\n') ## your groups and those of the GPU, KVM and sound devices, as group_add lines for composehack
 AMD_GPU=$(grep -l 0x1002 /sys/class/drm/renderD*/device/vendor 2>/dev/null | head -n 1)
 AMD_PRIME=${AMD_GPU:+pci-$(basename "$(readlink -f "${AMD_GPU%/vendor}")" | tr :. __)}
 DRI_DEVICE=$(ls -d /dev/dri 2>/dev/null)
+SND_DEVICE=$(ls -d /dev/snd 2>/dev/null)
+MACHINE_ID=$(ls /etc/machine-id /var/lib/dbus/machine-id 2>/dev/null | head -n 1)
+XAUTH=$(ls "${XAUTHORITY:-$HOME/.Xauthority}" 2>/dev/null) ## mounted only if it exists, as Docker would create a directory in its place
+# shellcheck disable=SC2016 ## left to docker compose, which reads XAUTHORITY and HOME whenever it starts the container
+XAUTH_PATH='${XAUTHORITY:-$HOME/.Xauthority}'
 NVIDIA_GPU=$(ls /dev/nvidiactl 2>/dev/null)
 NVIDIA_TOOLKIT=$(command -v nvidia-container-runtime-hook)
 NVIDIA=${NVIDIA_GPU:+${NVIDIA_TOOLKIT:+yes}}
@@ -54,12 +56,14 @@ services:
             - .:/home/$USER
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /run/user/$PROJECT_UID:/run/user/$PROJECT_UID
-            - /var/lib/dbus/machine-id:/var/lib/dbus/machine-id
-            - ~/.Xauthority:/home/$USER/.Xauthority
-        environment:
-            DISPLAY: $DISPLAY
-            XDG_RUNTIME_DIR: $XDG_RUNTIME_DIR
-${AMD_PRIME:+            DRI_PRIME: $AMD_PRIME
+${MACHINE_ID:+            - $MACHINE_ID:/etc/machine-id:ro
+            - $MACHINE_ID:/var/lib/dbus/machine-id:ro
+}${XAUTH:+            - $XAUTH_PATH:$XAUTH_PATH:ro
+}        environment:
+            DISPLAY: \${DISPLAY:-:0}
+            XDG_RUNTIME_DIR: /run/user/$PROJECT_UID
+${XAUTH:+            XAUTHORITY: $XAUTH_PATH
+}${AMD_PRIME:+            DRI_PRIME: $AMD_PRIME
 }${NVIDIA:+            NVIDIA_DRIVER_CAPABILITIES: all
             __NV_PRIME_RENDER_OFFLOAD: 1
             __GLX_VENDOR_LIBRARY_NAME: nvidia
@@ -67,9 +71,7 @@ ${AMD_PRIME:+            DRI_PRIME: $AMD_PRIME
 }        devices:
 ${DRI_DEVICE:+            - /dev/dri:/dev/dri
 }            - /dev/kvm:/dev/kvm
-            - /dev/snd:/dev/snd
-${GROUP_ADD:+        group_add:
-$GROUP_ADD
+${SND_DEVICE:+            - /dev/snd:/dev/snd
 }${NVIDIA:+        deploy:
             resources:
                 reservations:
@@ -87,7 +89,7 @@ composehack() {
 
     if ! grep -q "user\:" "docker-compose.yml"; then
         echo "Adding user configuration line to docker-compose.yml for GNU/Linux users."
-        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID\n\1@}" docker-compose.yml
+        sed -i "/working_dir\:/{s@^\( \+\)@\1user\: $PROJECT_UID\:$PROJECT_GID${PROJECT_GROUPS:+\n\1group_add\:$PROJECT_GROUPS}\n\1@}" docker-compose.yml
     fi
 
 }

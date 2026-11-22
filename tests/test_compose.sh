@@ -5,11 +5,17 @@
 # Each runs on a copy of project.sh in a temporary folder, with docker
 # replaced by a stand-in, so no container, image or volume is touched.
 #
+# Every user line also gets a group_add list of your other groups, and if
+# Docker is installed, "docker compose config" must accept the file.
+#
 # Run from anywhere: bash tests/test_compose.sh
 
 repo=$(cd "$(dirname "$0")/.." && pwd) || exit 1
 tmp=$(mktemp -d) || exit 1
 trap 'rm -rf "$tmp"' EXIT
+
+# the real docker, if installed, checks the result with "docker compose config"
+real_docker=$(command -v docker)
 
 # answers "docker compose version", the only call these steps may make
 mkdir "$tmp/bin"
@@ -22,6 +28,8 @@ EOF
 chmod +x "$tmp/bin/docker"
 
 user="user: $(id -u):$(id -g)"
+## supplementary groups besides the primary one and root, which composehack adds as group_add
+groups=$(id -G | tr ' ' '\n' | grep -v -x -e "$(id -g)" -e 0)
 failures=0
 count=0
 
@@ -54,6 +62,12 @@ for script in "$repo"/*/project.sh; do
         fail "$name: docker-compose.yml has no '$user' line"
     elif [ "$(grep -c "Adding user configuration" "$work.log")" -ne 1 ]; then
         fail "$name: composehack added the user line more than once"
+    elif [ -n "$groups" ] && [ "$(grep -c "group_add:" "$work/docker-compose.yml")" -ne "$(grep -c "$user" "$work/docker-compose.yml")" ]; then
+        fail "$name: not every '$user' line has a group_add list"
+    elif grep -q -e "~/" -e "^ *- /var/lib/dbus" "$work/docker-compose.yml"; then
+        fail "$name: docker-compose.yml mounts a path that may not exist on the host"
+    elif [ -n "$real_docker" ] && ! (cd "$work" && "$real_docker" compose config -q) >&2; then
+        fail "$name: docker compose config rejects docker-compose.yml"
     fi
 
     grep "unexpected: docker" "$work.log" >&2
