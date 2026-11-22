@@ -64,7 +64,7 @@ for script in "$repo"/*/project.sh; do
         fail "$name: composehack added the user line more than once"
     elif [ -n "$groups" ] && [ "$(grep -c "group_add:" "$work/docker-compose.yml")" -ne "$(grep -c "$user" "$work/docker-compose.yml")" ]; then
         fail "$name: not every '$user' line has a group_add list"
-    elif grep -q -e "~/" -e "^ *- /var/lib/dbus" "$work/docker-compose.yml"; then
+    elif grep -q -e "[~]/" -e "^ *- /var/lib/dbus" "$work/docker-compose.yml"; then
         fail "$name: docker-compose.yml mounts a path that may not exist on the host"
     elif [ -n "$real_docker" ] && ! (cd "$work" && "$real_docker" compose config -q) >&2; then
         fail "$name: docker compose config rejects docker-compose.yml"
