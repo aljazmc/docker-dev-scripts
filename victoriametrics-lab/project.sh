@@ -37,10 +37,10 @@ services:
             - wordpress
 
     blackbox-exporter:
-        image: prom/blackbox-exporter:latest
+        image: prom/blackbox-exporter:v0.29.1
 
     database:
-        image: mariadb:latest
+        image: mariadb:11.8.9-ubi
         volumes:
             - db_data:/var/lib/mysql
         environment:
@@ -55,7 +55,7 @@ services:
             retries: 30
 
     grafana:
-        image: grafana/grafana:latest
+        image: grafana/grafana:13.2.6
         volumes:
             - grafana_data:/var/lib/grafana
             - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -81,7 +81,7 @@ services:
             - database
 
     mysqld-exporter:
-        image: prom/mysqld-exporter:latest
+        image: prom/mysqld-exporter:v0.21.0
         command: [ --mysqld.address=database:3306, --mysqld.username=root ]
         environment:
             MYSQLD_EXPORTER_PASSWORD:   $PROJECT_NAME
@@ -113,7 +113,7 @@ services:
                 condition: service_healthy
 
     victoriametrics:
-        image: victoriametrics/victoria-metrics:latest
+        image: victoriametrics/victoria-metrics:v1.157.0
         command:
             - -promscrape.config=/etc/victoriametrics/scrape.yml
             - -storageDataPath=/storage

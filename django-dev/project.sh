@@ -31,7 +31,7 @@ compose() {
         cat << EOF > docker-compose.yml
 services:
     adminer:
-        image: adminer:latest
+        image: adminer:6.3.1
         environment:
             ADMINER_DEFAULT_SERVER:     database
         ports:
@@ -40,7 +40,7 @@ services:
             - database
 
     database:
-        image: postgres:latest
+        image: postgres:19.0
         volumes:
             - db_data:/var/lib/postgresql
         environment:

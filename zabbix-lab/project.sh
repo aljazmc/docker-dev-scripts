@@ -32,7 +32,7 @@ compose() {
         cat << EOF > docker-compose.yml
 services:
     database:
-        image: mariadb:latest
+        image: mariadb:11.8.9-ubi
         volumes:
             - db_data:/var/lib/mysql
         environment:
@@ -47,7 +47,7 @@ services:
             retries: 30
 
     grafana:
-        image: grafana/grafana:latest
+        image: grafana/grafana:13.2.6
         volumes:
             - grafana_data:/var/lib/grafana
             - ./config/grafana/provisioning:/etc/grafana/provisioning:ro

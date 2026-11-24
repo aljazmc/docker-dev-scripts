@@ -31,16 +31,16 @@ compose() {
         cat << EOF > docker-compose.yml
 services:
     apache-exporter:
-        image: bitnami/apache-exporter:latest
+        image: bitnami/apache-exporter:sha256-1cd3aad213fe8d360a9d8b88e645366e528d183d74829fa7b37bc8b785d113ee
         command: [ --scrape_uri=http://wordpress/server-status?auto ]
         depends_on:
             - wordpress
 
     blackbox-exporter:
-        image: prom/blackbox-exporter:latest
+        image: prom/blackbox-exporter:v0.29.1
 
     database:
-        image: mariadb:latest
+        image: mariadb:11.8.9-ubi
         volumes:
             - db_data:/var/lib/mysql
         environment:
@@ -55,7 +55,7 @@ services:
             retries: 30
 
     grafana:
-        image: grafana/grafana:latest
+        image: grafana/grafana:13.2.6
         volumes:
             - grafana_data:/var/lib/grafana
             - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -81,7 +81,7 @@ services:
             - database
 
     mysqld-exporter:
-        image: prom/mysqld-exporter:latest
+        image: prom/mysqld-exporter:v0.21.0
         command: [ --mysqld.address=database:3306, --mysqld.username=root ]
         environment:
             MYSQLD_EXPORTER_PASSWORD:   $PROJECT_NAME
@@ -90,7 +90,7 @@ services:
                 condition: service_healthy
 
     prometheus:
-        image: prom/prometheus:latest
+        image: prom/prometheus:v3.16.0
         volumes:
             - prometheus_data:/prometheus
             - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro

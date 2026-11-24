@@ -41,7 +41,7 @@ compose() {
         cat << EOF > docker-compose.yml
 services:
     composer:
-        image: composer:latest
+        image: composer:2.2.32
         working_dir: /app
         command: [ composer, install ]
         volumes:
@@ -49,7 +49,7 @@ services:
         profiles: [ tools ]
 
     database:
-        image: mariadb:latest
+        image: mariadb:11.8.9-ubi
         volumes:
             - db_data:/var/lib/mysql
         environment:
@@ -64,7 +64,7 @@ services:
             retries: 30
 
     joomla:
-        image: joomla:latest
+        image: joomla:6.2.0
         working_dir: /var/www/html
         volumes:
             - .:/var/www/html
