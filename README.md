@@ -1,6 +1,6 @@
 # docker-dev-scripts
 
-[![lint](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/lint.yml/badge.svg)](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/lint.yml)
+[![CI](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/ci.yml/badge.svg)](https://github.com/aljazmc/docker-dev-scripts/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ed?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![Debian 13.7](https://img.shields.io/badge/Debian-13.7-a81d33?logo=debian&logoColor=white)](https://www.debian.org/)
